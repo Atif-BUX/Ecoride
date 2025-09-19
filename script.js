@@ -20,7 +20,6 @@ if (logo && slogan) {
         });
     });
 }
-
 // Animation des images avec ScrollTrigger
 let mm = gsap.matchMedia();
 

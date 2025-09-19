@@ -88,7 +88,7 @@ main {
     opacity: 1; /* visible by default */
 }
 
-/* ✅ Fallback si JS est désactivé */
+/*  Fallback si JS est désactivé */
 noscript .image-gallery img {
     opacity: 1 !important;
 }
