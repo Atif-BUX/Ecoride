@@ -3,7 +3,7 @@ gsap.registerPlugin(ScrollTrigger);
 const logo = document.querySelector('#logo-animation');
 const slogan = document.querySelector('.text-center h1');
 
-// Animation du logo et du slogan EcoRide
+// Animation du logo et du slogan EcoRide design
 if (logo && slogan) {
     const mainTimeline = gsap.timeline({ defaults: { ease: "power2.out" } });
     mainTimeline
