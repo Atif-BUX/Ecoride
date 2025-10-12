@@ -1,6 +1,6 @@
 
 ### 🚀 Live web links
-➡️ [https://atif-bux.github.io/EcoRide_Studi/](https://atif-bux.github.io/EcoRide_Studi/)
+➡️ [[https://atif-bux.github.io/EcoRide_Studi/](https://atif-bux.github.io/Studi/)]
 *(other link : https://ecoridebyatif.onrender.com/)*
 
 ---
