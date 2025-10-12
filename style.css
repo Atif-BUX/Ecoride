@@ -17,15 +17,40 @@ body {
     background-color: var(--color-primary-dark);
 }
 
+/* --- AJOUT POUR L'ICÔNE DU MENU HAMBURGER EN BLANC --- */
+.navbar-toggler-icon {
+    /* Utilise une image SVG Bootstrap customisée pour la rendre blanche */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.navbar-toggler {
+    border: none !important;
+}
+/* ------------------------------------------------------------------------- */
+
+
 /* --- STYLES POUR LA ZONE PRINCIPALE TRANS PARENTE ET ENCADRÉE --- */
 .main-content-area {
+    /* Applique la couleur semi-transparente */
     background-color: var(--color-background-light-transparent);
+
+    /* Gère la superposition au-dessus de la vidéo */
     position: relative;
     z-index: 1;
+
+    /* Ajout d'une ombre légère pour décoller du fond vidéo */
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+
+    /* Marge par défaut pour mobile */
     margin: 20px auto;
+
+    /* Padding pour l'espace intérieur */
     padding: 20px 0;
-    width: 95%; /* Par défaut pour mobile */
+
+    /* Largeur par défaut pour mobile */
+    width: 95%;
+
+    /* Arrondis discrets pour l'effet "bloc" */
     border-radius: 8px;
 }
 /* ------------------------------------------------------------------------- */
@@ -106,6 +131,7 @@ a:hover {
 }
 
 main {
+    /* Padding par défaut conservé pour l'espace intérieur */
     padding: 20px 0;
 }
 
@@ -156,7 +182,7 @@ noscript .image-gallery img {
 @media (min-width: 768px) {
     /* Encadrement et centrage de la zone principale sur bureau */
     .main-content-area {
-        /* Augmentation de la largeur pour s'aligner sur l'en-tête */
+        /* Augmentation de la largeur pour s'aligner sur l'en-tête (1140px est une largeur commune pour Bootstrap) */
         max-width: 1140px;
         width: 90%;
         margin: 50px auto;
