@@ -5,6 +5,8 @@
     --color-secondary-yellow: #FFD700;
     --color-neutral-white: #FFFFFF;
     --color-neutral-gray: #333333;
+    /* Opacité réduite à 0.8 pour mieux voir la vidéo derrière */
+    --color-background-light-transparent: rgba(236, 254, 242, 0.8);
 }
 
 body {
@@ -14,6 +16,19 @@ body {
 .main-header {
     background-color: var(--color-primary-dark);
 }
+
+/* --- STYLES POUR LA ZONE PRINCIPALE TRANS PARENTE ET ENCADRÉE --- */
+.main-content-area {
+    background-color: var(--color-background-light-transparent);
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    margin: 20px auto;
+    padding: 20px 0;
+    width: 95%; /* Par défaut pour mobile */
+    border-radius: 8px;
+}
+/* ------------------------------------------------------------------------- */
 
 .main-footer {
     background-color: var(--color-neutral-gray);
@@ -48,6 +63,16 @@ a:hover {
     color: var(--color-primary-light);
 }
 
+.main-footer a {
+    color: var(--color-neutral-white);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.main-footer a:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
 .nav-link {
     color: var(--color-neutral-white) !important;
 }
@@ -68,6 +93,7 @@ a:hover {
     background-color: #248c24;
 }
 
+/* --- Styles de la Vidéo --- */
 #bg-video {
     position: fixed;
     right: 0;
@@ -80,16 +106,84 @@ a:hover {
 }
 
 main {
-    background-color: rgba(255, 255, 255, 0.8);
     padding: 20px 0;
 }
 
 .image-gallery img {
     border: 3px solid var(--color-primary-light);
-    opacity: 1; /* visible by default */
+    border-radius: 0.5rem;
+    opacity: 1;
 }
 
-/*  Fallback si JS est désactivé */
+.search-tool-card {
+    background-color: var(--color-neutral-white);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.main-footer .footer-link {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.main-footer .footer-link:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
+.main-footer .footer-bottom {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
 noscript .image-gallery img {
     opacity: 1 !important;
+}
+
+/* --- MEDIA QUERIES pour le Responsive --- */
+
+@media (max-width: 576px) {
+    .input-group {
+        display: none;
+    }
+    .footer-top {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-top p {
+        margin-bottom: 5px;
+    }
+}
+
+/* Styles Responsives pour les Écrans d'Ordinateur (>= 768px) */
+@media (min-width: 768px) {
+    /* Encadrement et centrage de la zone principale sur bureau */
+    .main-content-area {
+        /* Augmentation de la largeur pour s'aligner sur l'en-tête */
+        max-width: 1140px;
+        width: 90%;
+        margin: 50px auto;
+    }
+
+    /* Contenu principal: Assure que la section Mission reste centrée et lisible */
+    .mission-section p {
+        width: 65% !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Pied de Page (Footer) - Optimisation Bureau */
+    .main-footer .container {
+        max-width: 1200px;
+    }
+
+    .footer-top {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .footer-top p.text-start {
+        text-align: left !important;
+    }
+
+    .footer-top p.text-end {
+        text-align: right !important;
+    }
 }
