@@ -9,15 +9,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="bg-light">
 
-<header class="main-header sticky-top">
+<video autoplay muted loop playsinline id="bg-video">
+    <source src="medias/ontheroad.mp4" type="video/mp4">
+</video>
+
+
+<header class="main-header text-white py-3 sticky-top">
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="index.html">
-                <img src="logo_ecoride.svg" alt="EcoRide Logo" width="30" height="30" class="me-2" id="logo-animation">
-                EcoRide
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
+                    <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
+                    <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
+                        <line x1="50" y1="5" x2="50" y2="95" />
+                        <line x1="15" y1="27" x2="85" y2="73" />
+                        <line x1="85" y1="27" x2="15" y2="73" />
+                    </g>
+                    <text class="logo-text" x="50" y="60" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="45" font-weight="bold" fill="#FFFFFF">ER</text>
+                </svg>
+                <span class="text-white fw-bold">EcoRide</span>
             </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -41,7 +56,7 @@
 <main class="container py-5">
 
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bolder mb-3" style="color: var(--color-primary-dark);">
+        <h1 class="display-4 fw-bolder mb-3" style="color: var(--color-primary-dark);" id="slogan-animation">
             Voyagez Vert, Voyagez Ensemble.
         </h1>
         <p class="lead text-muted">
@@ -116,13 +131,13 @@
         <h2 class="text-center mb-4" style="color: var(--color-primary-dark);">La Communauté EcoRide</h2>
         <div class="row g-4">
             <div class="col-12 col-md-4">
-                <img src="ride_1.jpg" class="img-fluid rounded shadow" alt="Covoiturage en ville">
+                <img src="graphics/heureux-amis.jpg" class="img-fluid rounded shadow" alt="Covoiturage en ville">
             </div>
             <div class="col-12 col-md-4">
-                <img src="ride_2.jpg" class="img-fluid rounded shadow" alt="Voyage longue distance">
+                <img src="graphics/couple-voyage.jpg" class="img-fluid rounded shadow" alt="Voyage longue distance">
             </div>
             <div class="col-12 col-md-4">
-                <img src="ride_3.jpg" class="img-fluid rounded shadow" alt="Aide au chargement des bagages">
+                <img src="graphics/amis-ensemble.jpg" class="img-fluid rounded shadow" alt="Aide au chargement des bagages">
             </div>
         </div>
     </section>
