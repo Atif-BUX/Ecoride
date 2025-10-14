@@ -137,6 +137,16 @@ main {
     padding: 20px 0;
 }
 
+/* La carte de recherche */
+.search-tool-card {
+    /* Nouvelle couleur de fond avec transparence (Alpha=0.9, soit 90% d'opacité) */
+    /* C'est un blanc presque opaque, laissant juste entrevoir la vidéo. */
+    background-color: rgba(255, 255, 255, 0.8);
+
+    border-radius: 12px;
+    /* Assurez-vous d'utiliser la bonne ombre si vous en avez une */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 .image-gallery img {
     border: 3px solid var(--color-primary-light);
     border-radius: 0.5rem;
