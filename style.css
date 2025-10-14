@@ -26,6 +26,7 @@ body {
 .navbar-toggler {
     border: none !important;
 }
+
 /* ------------------------------------------------------------------------- */
 
 
@@ -53,6 +54,7 @@ body {
     /* Arrondis discrets pour l'effet "bloc" */
     border-radius: 8px;
 }
+
 /* ------------------------------------------------------------------------- */
 
 .main-footer {
@@ -168,11 +170,13 @@ noscript .image-gallery img {
     .input-group {
         display: none;
     }
+
     .footer-top {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
+
     .footer-top p {
         margin-bottom: 5px;
     }

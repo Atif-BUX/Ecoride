@@ -1,0 +1,122 @@
+/* CSS Document 2025 for project Studi "EcoRide" designed by Mr Atif BUX */
+:root {
+    --color-primary-dark: #004B40;
+    --color-primary-light: #32CD32;
+    --color-secondary-yellow: #FFD700;
+    --color-neutral-white: #FFFFFF;
+    --color-neutral-gray: #333333;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.main-header {
+    background-color: var(--color-primary-dark);
+}
+
+.main-footer {
+    background-color: var(--color-neutral-gray);
+}
+
+h1 {
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+h2 {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+p {
+    font-weight: 400;
+    color: var(--color-neutral-gray);
+}
+
+.main-footer p {
+    color: var(--color-neutral-white);
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-primary-dark);
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--color-primary-light);
+}
+/* Styles spécifiques pour les liens dans le pied de page */
+.main-footer a {
+    /* La couleur de base est déjà blanche via la classe Bootstrap "text-white" dans le HTML,
+       mais on s'assure que la transition est appliquée. */
+    transition: color 0.3s ease;
+}
+
+.main-footer a:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+.nav-link {
+    color: var(--color-neutral-white) !important;
+}
+
+.nav-link:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
+.main-btn {
+    background-color: var(--color-primary-light);
+    color: var(--color-neutral-white);
+    font-weight: 600;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.main-btn:hover {
+    background-color: #248c24;
+}
+
+#bg-video {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.6;
+}
+
+main {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px 0;
+}
+
+.image-gallery img {
+    border: 3px solid var(--color-primary-light);
+    opacity: 1; /* visible by default */
+}
+
+/*  Fallback si JS est désactivé */
+noscript .image-gallery img {
+    opacity: 1 !important;
+}
+/* Styles pour améliorer la réactivité de la section de recherche */
+@media (max-width: 576px) {
+    /* Sur les très petits écrans, empiler l'input et le bouton */
+    .input-group {
+        display: block; /* Force le div à prendre toute la largeur */
+    }
+
+    .input-group .form-control,
+    .input-group .main-btn {
+        width: 100%; /* Les éléments prennent toute la largeur disponible */
+        margin-bottom: 10px; /* Ajoute un espace entre le champ et le bouton */
+    }
+
+    /* Supprimer les coins arrondis supplémentaires créés par Bootstrap pour cet agencement */
+    .input-group .form-control {
+        border-radius: var(--bs-border-radius);
+    }
+}

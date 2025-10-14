@@ -1,98 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoRide - Votre solution de covoiturage écologique</title>
-
+    <title>EcoRide - Votre Plateforme de Covoiturage Écologique</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 </head>
+<body class="bg-light">
 
-<body>
-<video autoplay muted loop playsinline id="bg-video">
-    <source src="medias/ontheroad.mp4" type="video/mp4">
-</video>
-
-<header class="main-header text-white py-3">
+<header class="main-header sticky-top">
     <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
-                <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
-                    <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
-                    <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
-                        <line x1="50" y1="5" x2="50" y2="95" />
-                        <line x1="15" y1="27" x2="85" y2="73" />
-                        <line x1="85" y1="27" x2="15" y2="73" />
-                    </g>
-                    <text class="logo-text" x="50" y="60" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="45" font-weight="bold" fill="#FFFFFF">ER</text>
-                </svg>
-                <span class="text-white fw-bold">EcoRide</span>
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="index.html">
+                <img src="logo_ecoride.svg" alt="EcoRide Logo" width="30" height="30" class="me-2" id="logo-animation">
+                EcoRide
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link text-white" href="#">Covoiturages</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#">Contact</a></li>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="connexion.html">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="proposer_trajet.html">Proposer</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 </header>
 
-<main class="py-5 main-content-area">
-    <div class="container">
-        <section class="text-center mb-5">
-            <h1 class="display-4 mb-5">Voyagez autrement, voyagez écolo.</h1>
+<main class="container py-5">
 
-            <div class="d-flex justify-content-center">
-                <div class="search-tool-card p-4 shadow-lg rounded-3 w-100" style="max-width: 500px;">
-                    <div class="mb-3">
-                        <label for="depart" class="form-label text-start d-block fw-bold"><i class="fas fa-map-marker-alt" style="color: var(--color-primary-light);"></i> Départ</label>
-                        <input type="text" class="form-control" id="depart" placeholder="Ville de départ">
-                    </div>
-                    <div class="mb-3">
-                        <label for="arrivee" class="form-label text-start d-block fw-bold"><i class="fas fa-flag" style="color: var(--color-primary-light);"></i> Arrivée</label>
-                        <input type="text" class="form-control" id="arrivee" placeholder="Ville d'arrivée">
-                    </div>
-                    <div class="mb-4">
-                        <label for="date" class="form-label text-start d-block fw-bold"><i class="fas fa-calendar-alt" style="color: var(--color-primary-light);"></i> Date</label>
-                        <input type="date" class="form-control" id="date" placeholder="jj/mm/aaaa">
-                    </div>
-                    <button class="btn main-btn w-100 p-3 fw-bold" type="button"><i class="fas fa-search"></i> Rechercher un trajet</button>
-                </div>
-            </div>
-        </section>
-
-        <section class="mt-5 mission-section">
-            <h2 class="text-center mb-4">Notre Mission</h2>
-            <p class="text-center w-75 mx-auto fs-5 mb-5">
-                EcoRide s'engage à réduire l'empreinte carbone des déplacements quotidiens en favorisant le covoiturage automobile. Ensemble, nous contribuons à un avenir plus durable en partageant nos trajets, réduisant les émissions de CO₂ et en créant une communauté de voyageurs responsables.
-            </p>
-        </section>
-
-        <section class="mt-5 image-gallery-container">
-            <div class="row text-center image-gallery">
-                <div class="col-md-4 mb-3">
-                    <img src="graphics/heureux-amis.jpg" alt="Personnes heureuses en covoiturage" class="img-fluid rounded-3 shadow-sm mission-image">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <img src="graphics/couple-voyage.jpg" alt="Amis voyageant ensemble" class="img-fluid rounded-3 shadow-sm mission-image">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <img src="graphics/amis-ensemble.jpg" alt="Voyage écologique" class="img-fluid rounded-3 shadow-sm mission-image">
-                </div>
-            </div>
-        </section>
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bolder mb-3" style="color: var(--color-primary-dark);">
+            Voyagez Vert, Voyagez Ensemble.
+        </h1>
+        <p class="lead text-muted">
+            Votre solution de covoiturage simple, économique et écologique.
+        </p>
     </div>
+
+    <div class="p-4 shadow-sm search-tool-card mb-5">
+        <form id="searchForm" action="covoiturages.html" method="GET" novalidate>
+
+            <h2 class="fs-4 fw-bold text-center mb-4" style="color: var(--color-primary-dark);">
+                <i class="fas fa-search me-2"></i> Trouvez votre prochain EcoRide
+            </h2>
+
+            <div class="row g-3">
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                        <input type="text" class="form-control" id="searchDepart" name="depart" placeholder="Départ (Ville)" required>
+                    </div>
+                    <div id="searchDepartError" class="text-danger small mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-flag"></i></span>
+                        <input type="text" class="form-control" id="searchArrivee" name="arrivee" placeholder="Arrivée (Ville)" required>
+                    </div>
+                    <div id="searchArriveeError" class="text-danger small mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        <input type="date" class="form-control" id="searchDate" name="date" required>
+                    </div>
+                    <div id="searchDateError" class="text-danger small mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <button type="submit" class="w-100 main-btn btn btn-lg h-100">
+                        <i class="fas fa-arrow-right me-2"></i> Rechercher
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <section class="mb-5">
+        <h2 class="text-center mb-4" style="color: var(--color-primary-dark);">Pourquoi EcoRide ?</h2>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <i class="fas fa-leaf display-4 mb-3" style="color: var(--color-primary-light);"></i>
+                <h3 class="fs-5 fw-bold">Écologique</h3>
+                <p class="text-muted">Réduisez vos émissions de CO2 en partageant vos trajets.</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <i class="fas fa-euro-sign display-4 mb-3" style="color: var(--color-primary-light);"></i>
+                <h3 class="fs-5 fw-bold">Économique</h3>
+                <p class="text-muted">Divisez les coûts d'essence et de péages.</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <i class="fas fa-smile display-4 mb-3" style="color: var(--color-primary-light);"></i>
+                <h3 class="fs-5 fw-bold">Social</h3>
+                <p class="text-muted">Faites de nouvelles rencontres et voyagez en bonne compagnie.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="image-gallery py-4">
+        <h2 class="text-center mb-4" style="color: var(--color-primary-dark);">La Communauté EcoRide</h2>
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <img src="ride_1.jpg" class="img-fluid rounded shadow" alt="Covoiturage en ville">
+            </div>
+            <div class="col-12 col-md-4">
+                <img src="ride_2.jpg" class="img-fluid rounded shadow" alt="Voyage longue distance">
+            </div>
+            <div class="col-12 col-md-4">
+                <img src="ride_3.jpg" class="img-fluid rounded shadow" alt="Aide au chargement des bagages">
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <footer class="main-footer text-center py-4">
@@ -108,21 +142,17 @@
                 <a href="#" class="text-white-50 text-decoration-none footer-link">Confidentialité</a>
             </p>
         </div>
-        <hr class="border-white-50 opacity-25">
-        <p class="mb-0 text-white-50 footer-bottom">&copy; 2025 EcoRide. Tous droits réservés.</p>
+        <div class="container text-center border-top border-secondary-subtle pt-2">
+            <p class="footer-bottom mb-0">
+                © 2025 EcoRide. Tous droits réservés.
+            </p>
+        </div>
     </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="script.js"></script>
-<noscript>
-    <style>
-        .image-gallery img {
-            opacity: 1 !important;
-            transform: none !important;
-        }
-    </style>
-</noscript>
 </body>
 </html>

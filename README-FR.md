@@ -28,9 +28,14 @@ Its goal is to provide a clean, simple interface to **search, filter, and view a
 
 ### 📁 Project Structure
 ├── index.html # Page d’accueil et recherche
+
 ├── style.css # Feuille de style principale
+
 ├── script.js # Logique JavaScript de base
+
 ├── /medias/ # Images et icônes
+
 ├── /graphics/ # Éléments graphiques (logo, wireframe)
+
 └── README-FR.md # Documentation du projet
 
