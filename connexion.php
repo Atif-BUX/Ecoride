@@ -1,20 +1,44 @@
+<?php
+// Fichier: connexion.php
+
+// Déplacez tout le PHP en haut !
+session_start();
+
+// Si l'utilisateur est déjà connecté, le rediriger vers la liste des trajets
+if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
+    header('Location: covoiturages.php');
+    exit;
+}
+
+// Récupérer et effacer le message d'erreur de session
+$login_error = $_SESSION['login_error'] ?? null;
+unset($_SESSION['login_error']);
+
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un Compte - EcoRide</title>
+    <title>Connexion - EcoRide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --color-primary-dark: #1e8449;
+            --color-primary-light: #32CD32;
+            --color-neutral-white: #ffffff;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
 <header class="main-header text-white py-3 sticky-top">
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
                     <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
                     <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
@@ -26,21 +50,14 @@
                 </svg>
                 <span class="text-white fw-bold">EcoRide</span>
             </a>
-
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="connexion.html">Connexion</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="proposer_trajet.html">Proposer</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="covoiturages.php">Covoiturages</a></li>
+                    <li class="nav-item"><a class="nav-link" href="inscription.php">Inscription</a></li>
+                    <li class="nav-item"><a class="nav-link" href="connexion.php">Connexion</a></li>
                 </ul>
             </div>
         </div>
@@ -51,52 +68,44 @@
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
 
-            <h1 class="text-center mb-4" style="color: var(--color-primary-dark);">Créer mon compte</h1>
+            <h1 class="text-center mb-4" style="color: var(--color-primary-dark);">Accéder à mon compte</h1>
             <p class="text-center text-muted mb-4">
-                Rejoignez la communauté EcoRide et recevez
-                <span class="fw-bold" style="color: var(--color-primary-light);">20 crédits offerts</span> ! 🥳
+                Entrez vos identifiants pour vous connecter à EcoRide.
             </p>
 
-            <div class="p-4 shadow-sm search-tool-card">
-                <form action="#" method="POST">
+            <?php if ($login_error): ?>
+                <div class="alert alert-danger text-center" role="alert">
+                    <?= htmlspecialchars($login_error); ?>
+                </div>
+            <?php endif; ?>
 
-                    <div class="mb-3">
-                        <label for="pseudo" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
-                            <i class="fas fa-user-circle me-2"></i> Pseudo
-                        </label>
-                        <input type="text" class="form-control" id="pseudo" placeholder="Votre pseudo unique" required>
-                    </div>
+            <div class="p-4 shadow-sm search-tool-card">
+                <form action="login_process.php" method="POST" id="connexionForm" novalidate>
+                    <?= class_exists('Csrf') ? Csrf::input() : '' ?>
 
                     <div class="mb-3">
                         <label for="email" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
                             <i class="fas fa-envelope me-2"></i> Email
                         </label>
-                        <input type="email" class="form-control" id="email" placeholder="contact@exemple.fr" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
-                            <i class="fas fa-lock me-2"></i> Mot de passe
-                        </label>
-                        <input type="password" class="form-control" id="password" placeholder="Mot de passe sécurisé" required>
-                        <div class="form-text">
-                            Doit contenir au moins 8 caractères, une majuscule et un chiffre. (Sécurité)
-                        </div>
+                        <input type="email" class="form-control" id="email" placeholder="contact@exemple.fr" required name="email">
                     </div>
 
                     <div class="mb-4">
-                        <label for="confirm-password" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
-                            <i class="fas fa-lock me-2"></i> Confirmer mot de passe
+                        <label for="password" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
+                            <i class="fas fa-lock me-2"></i> Mot de passe
                         </label>
-                        <input type="password" class="form-control" id="confirm-password" placeholder="Confirmer votre mot de passe" required>
+                        <input type="password" class="form-control" id="password" placeholder="Votre mot de passe" required name="password">
+                        <div class="form-text text-end">
+                            <a href="#" class="small text-muted">Mot de passe oublié ?</a>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-100 main-btn btn btn-lg">
-                        <i class="fas fa-check-circle me-2"></i> Je m'inscris !
+                    <button type="submit" class="w-100 btn btn-lg fw-bold text-white" style="background-color: var(--color-primary-dark);">
+                        <i class="fas fa-sign-in-alt me-2"></i> Connexion
                     </button>
 
                     <p class="text-center mt-3">
-                        Déjà un compte ? <a href="connexion.html" style="color: var(--color-primary-dark);">Connectez-vous ici</a>.
+                        Pas encore membre ? <a href="inscription.php" style="color: var(--color-primary-dark);">Créez un compte ici</a>.
                     </p>
                 </form>
             </div>
@@ -124,12 +133,13 @@
             </p>
         </div>
     </div>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+ </footer>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+ <script src="script.js"></script>
+ </body>
+ </html>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-<script src="script.js"></script>
-</body>
-</html>
+

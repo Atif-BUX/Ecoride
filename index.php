@@ -1,3 +1,19 @@
+<?php
+// Fichier: index.php
+
+// 1. Démarrer la session
+session_start();
+
+// 2. Vérifier si l'utilisateur est connecté, SANS BLOQUER L'ACCÈS
+$is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true;
+
+// 3. Récupérer le prénom de l'utilisateur pour l'affichage personnalisé
+// Le prénom n'est récupéré que si l'utilisateur est connecté.
+$firstname = $is_logged_in ? ($_SESSION['user_firstname'] ?? 'Utilisateur') : 'Visiteur';
+
+// Le reste de votre code HTML/PHP suit...
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -16,7 +32,7 @@
 <header class="main-header text-white py-3 sticky-top">
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
                     <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
                     <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
@@ -35,14 +51,21 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                        <a class="nav-link" href="covoiturages.php">Covoiturages</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="connexion.html">Connexion</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="proposer_trajet.html">Proposer</a>
-                    </li>
+
+                    <?php if ($is_logged_in): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="proposer_trajet.php">Proposer</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="deconnexion.php">Déconnexion</a>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="connexion.php">Connexion</a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -50,6 +73,8 @@
 </header>
 
 <main class="container py-5">
+    <h1 class="text-center mb-4">Bienvenue, <?php echo htmlspecialchars($firstname); ?> !</h1>
+    <p class="text-center lead">Trouvez ou proposez votre prochain covoiturage.</p>
 
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bolder mb-3" style="color: var(--color-primary-dark);" id="slogan-animation">
@@ -60,44 +85,54 @@
         </p>
     </div>
 
-    <div class="p-4 shadow-sm search-tool-card mb-5">
-        <form id="searchForm" action="covoiturages.html" method="GET" novalidate>
+    <div class="search-section bg-white p-4 rounded shadow-lg mb-5">
+        <h2 class="text-center text-dark mb-4">Trouvez votre prochain EcoRide</h2>
 
-            <h2 class="fs-4 fw-bold text-center mb-4" style="color: var(--color-primary-dark);">
-                <i class="fas fa-search me-2"></i> Trouvez votre prochain EcoRide
-            </h2>
+        <form action="covoiturages.php" method="GET" class="row g-3">
 
-            <div class="row g-3">
-
-                <div class="col-12 col-md-6 col-lg-3">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                        <input type="text" class="form-control" id="searchDepart" name="depart" placeholder="Départ (Ville)" required>
-                    </div>
-                    <div id="searchDepartError" class="text-danger small mt-1" style="display: none;"></div>
+            <div class="col-md-4">
+                <label for="depart" class="form-label fw-bold">Départ</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                    <input type="text"
+                           class="form-control"
+                           id="depart"
+                           name="depart"
+                           placeholder="Ville de départ"
+                           value="<?= htmlspecialchars($departure ?? '') ?>">
                 </div>
+            </div>
 
-                <div class="col-12 col-md-6 col-lg-3">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-flag"></i></span>
-                        <input type="text" class="form-control" id="searchArrivee" name="arrivee" placeholder="Arrivée (Ville)" required>
-                    </div>
-                    <div id="searchArriveeError" class="text-danger small mt-1" style="display: none;"></div>
+            <div class="col-md-4">
+                <label for="arrivee" class="form-label fw-bold">Arrivée</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-location-arrow"></i></span>
+                    <input type="text"
+                           class="form-control"
+                           id="arrivee"
+                           name="arrivee"
+                           placeholder="Ville d'arrivée"
+                           value="<?= htmlspecialchars($arrival ?? '') ?>">
                 </div>
+            </div>
 
-                <div class="col-12 col-md-6 col-lg-3">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                        <input type="date" class="form-control" id="searchDate" name="date" required>
-                    </div>
-                    <div id="searchDateError" class="text-danger small mt-1" style="display: none;"></div>
+            <div class="col-md-4">
+                <label for="date_depart" class="form-label fw-bold">Date</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                    <input type="date"
+                           class="form-control"
+                           id="date_depart"
+                           name="date_depart"
+                           value="<?= htmlspecialchars($date ?? '') ?>">
                 </div>
+            </div>
 
-                <div class="col-12 col-md-6 col-lg-3">
-                    <button type="submit" class="w-100 main-btn btn btn-lg h-100">
-                        <i class="fas fa-arrow-right me-2"></i> Rechercher
-                    </button>
-                </div>
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-lg w-50 fw-bold"
+                        style="background-color: var(--color-primary-dark); color: var(--color-neutral-white);">
+                    Rechercher un trajet <i class="fas fa-car ms-2"></i>
+                </button>
             </div>
         </form>
     </div>
@@ -138,31 +173,7 @@
         </div>
     </section>
 
-</main>
 
-<footer class="main-footer text-center py-4">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-2 footer-top">
-            <p class="mb-0 text-start">
-                <a href="mailto:contact@ecoride.fr" class="text-white-50 text-decoration-none footer-link">
-                    <i class="fas fa-envelope me-2" style="color: var(--color-primary-light);"></i> contact@ecoride.fr
-                </a>
-            </p>
-            <p class="mb-0 text-end">
-                <a href="#" class="text-white-50 text-decoration-none me-4 footer-link">Mentions légales</a>
-                <a href="#" class="text-white-50 text-decoration-none footer-link">Confidentialité</a>
-            </p>
-        </div>
-        <div class="container text-center border-top border-secondary-subtle pt-2">
-            <p class="footer-bottom mb-0">
-                © 2025 EcoRide. Tous droits réservés.
-            </p>
-        </div>
-    </div>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="script.js"></script>
-</body>
-</html>
+</main>
+<?php require __DIR__ . '/includes/layout/footer.php'; ?>
+

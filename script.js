@@ -18,13 +18,13 @@ function displayError(inputElement, message) {
 function validateTrajetForm() {
     let isValid = true;
 
-    // Récupération des champs
+    // Récupération des champs - LES IDs SONT MAINTENANT CORRECTS
     const departInput = document.getElementById('depart');
     const arriveeInput = document.getElementById('arrivee');
-    const dateInput = document.getElementById('date');
-    const heureInput = document.getElementById('heure');
-    const placesInput = document.getElementById('places');
-    const prixInput = document.getElementById('prix');
+    const dateInput = document.getElementById('date_depart'); // Était 'date'
+    const heureInput = document.getElementById('heure_depart'); // Était 'heure'
+    const placesInput = document.getElementById('seats'); // Était 'places'
+    const prixInput = document.getElementById('price'); // Était 'prix'
 
     // Réinitialisation des erreurs
     const inputs = [departInput, arriveeInput, dateInput, heureInput, placesInput, prixInput];
@@ -215,7 +215,15 @@ function validateSearchForm() {
 // -----------------------------------------------------------------------
 // --- LOGIQUE GLOBALE (Événements et GSAP) ---
 // -----------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', function() {
+function __runOnReady(cb) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cb);
+    } else {
+        cb();
+    }
+}
+
+__runOnReady(function() {
 
     // --- LOGIQUE GSAP GLOBALE (ANIMATION DU LOGO) ---
     // Cette partie est exécutée sur TOUTES les pages ayant l'ID #logo-animation
@@ -239,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // --- LOGIQUE GSAP SPÉCIFIQUE À LA PAGE D'ACCUEIL (index.html) ---
+    // --- LOGIQUE GSAP SPÉCIFIQUE À LA PAGE D'ACCUEIL (index.php) ---
     // Les animations ne se lancent que si le slogan est présent
     const slogan = document.querySelector('#slogan-animation'); // Utilisation de l'ID que nous avons ajouté
 
@@ -296,26 +304,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 2. Connexion (ID: connexionForm)
+// 2. Connexion (ID: connexionForm)
     const formConnexion = document.getElementById('connexionForm');
     if (formConnexion) {
         formConnexion.addEventListener('submit', function(event) {
-            event.preventDefault();
+            event.preventDefault(); // <-- LAISSEZ CETTE LIGNE
             if (validateConnexionForm()) {
-                alert("Connexion réussie côté client ! Envoi au serveur simulé.");
-                // formConnexion.submit();
+                // CETTE LIGNE DOIT ÊTRE COMMENTÉE OU SUPPRIMÉE :
+                // alert("Connexion réussie côté client ! Envoi au serveur simulé.");
+
+                // CETTE LIGNE DOIT ÊTRE DÉCOMMENTÉE ET PRÉSENTE :
+                formConnexion.submit();
             }
         });
     }
-
     // 3. Publication de Trajet (ID: trajetForm)
     const formTrajet = document.getElementById('trajetForm');
     if (formTrajet) {
         formTrajet.addEventListener('submit', function(event) {
-            event.preventDefault();
+
+            // 🛑 TRÈS IMPORTANT : Ceci évite la boucle infinie de soumission
+            if (this.classList.contains('js-submitting')) return;
+
+            event.preventDefault(); // On garde le preventDefault() pour lancer la validation JS
+
             if (validateTrajetForm()) {
-                alert("Trajet publié côté client ! Envoi au serveur simulé.");
-                // formTrajet.submit();
+
+                // 1. Marquer le formulaire pour éviter la boucle infinie
+                this.classList.add('js-submitting');
+
+                // 2. Soumission réelle (celle-ci est la bonne !)
+                this.submit();
             }
         });
     }

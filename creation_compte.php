@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - EcoRide</title>
+    <title>Créer un Compte - EcoRide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <header class="main-header text-white py-3 sticky-top">
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
                     <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
                     <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
@@ -33,13 +33,13 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                        <a class="nav-link" href="covoiturages.php">Covoiturages</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="connexion.html">Connexion</a>
+                        <a class="nav-link" href="connexion.php">Connexion</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="proposer_trajet.html">Proposer</a>
+                        <a class="nav-link" href="proposer_trajet.php">Proposer</a>
                     </li>
                 </ul>
             </div>
@@ -51,13 +51,21 @@
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
 
-            <h1 class="text-center mb-4" style="color: var(--color-primary-dark);">Accéder à mon compte</h1>
+            <h1 class="text-center mb-4" style="color: var(--color-primary-dark);">Créer mon compte</h1>
             <p class="text-center text-muted mb-4">
-                Entrez vos identifiants pour vous connecter à EcoRide.
+                Rejoignez la communauté EcoRide et recevez
+                <span class="fw-bold" style="color: var(--color-primary-light);">20 crédits offerts</span> ! 🥳
             </p>
 
             <div class="p-4 shadow-sm search-tool-card">
                 <form action="#" method="POST">
+
+                    <div class="mb-3">
+                        <label for="pseudo" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
+                            <i class="fas fa-user-circle me-2"></i> Pseudo
+                        </label>
+                        <input type="text" class="form-control" id="pseudo" placeholder="Votre pseudo unique" required>
+                    </div>
 
                     <div class="mb-3">
                         <label for="email" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
@@ -66,55 +74,36 @@
                         <input type="email" class="form-control" id="email" placeholder="contact@exemple.fr" required>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label for="password" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
                             <i class="fas fa-lock me-2"></i> Mot de passe
                         </label>
-                        <input type="password" class="form-control" id="password" placeholder="Votre mot de passe" required>
-                        <div class="form-text text-end">
-                            <a href="#" class="small text-muted">Mot de passe oublié ?</a>
+                        <input type="password" class="form-control" id="password" placeholder="Mot de passe sécurisé" required>
+                        <div class="form-text">
+                            Doit contenir au moins 8 caractères, une majuscule et un chiffre. (Sécurité)
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <label for="confirm-password" class="form-label fw-bold d-flex align-items-center" style="color: var(--color-primary-dark);">
+                            <i class="fas fa-lock me-2"></i> Confirmer mot de passe
+                        </label>
+                        <input type="password" class="form-control" id="confirm-password" placeholder="Confirmer votre mot de passe" required>
+                    </div>
+
                     <button type="submit" class="w-100 main-btn btn btn-lg">
-                        <i class="fas fa-sign-in-alt me-2"></i> Connexion
+                        <i class="fas fa-check-circle me-2"></i> Je m'inscris !
                     </button>
 
                     <p class="text-center mt-3">
-                        Pas encore membre ? <a href="creation_compte.html" style="color: var(--color-primary-dark);">Créez un compte ici</a>.
+                        Déjà un compte ? <a href="connexion.php" style="color: var(--color-primary-dark);">Connectez-vous ici</a>.
                     </p>
                 </form>
             </div>
 
         </div>
     </div>
+
 </main>
+<?php require __DIR__ . '/includes/layout/footer.php'; ?>
 
-<footer class="main-footer text-center py-4">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-2 footer-top">
-            <p class="mb-0 text-start">
-                <a href="mailto:contact@ecoride.fr" class="text-white-50 text-decoration-none footer-link">
-                    <i class="fas fa-envelope me-2" style="color: var(--color-primary-light);"></i> contact@ecoride.fr
-                </a>
-            </p>
-            <p class="mb-0 text-end">
-                <a href="#" class="text-white-50 text-decoration-none me-4 footer-link">Mentions légales</a>
-                <a href="#" class="text-white-50 text-decoration-none footer-link">Confidentialité</a>
-            </p>
-        </div>
-        <div class="container text-center border-top border-secondary-subtle pt-2">
-            <p class="footer-bottom mb-0">
-                © 2025 EcoRide. Tous droits réservés.
-            </p>
-        </div>
-    </div>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-
-<script src="script.js"></script>
-</body>
-</html>

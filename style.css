@@ -1,6 +1,6 @@
 /* CSS Document 2025 for project Studi "EcoRide" designed by Mr Atif BUX */
 :root {
-    --color-primary-dark: #004B40;
+    --color-primary-dark: #1e8449; /* #00CC00; <-- More brighter */
     --color-primary-light: #32CD32;
     --color-secondary-yellow: #FFD700;
     --color-neutral-white: #FFFFFF;
@@ -11,6 +11,21 @@
 
 body {
     font-family: 'Montserrat', sans-serif;
+}
+
+/* Layout: sticky footer full width */
+html, body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
 }
 
 .main-header {
@@ -59,6 +74,9 @@ body {
 
 .main-footer {
     background-color: var(--color-neutral-gray);
+    width: 100%;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 h1 {
@@ -177,7 +195,19 @@ noscript .image-gallery img {
 /* --- MEDIA QUERIES pour le Responsive --- */
 
 @media (max-width: 576px) {
+    /* Ne pas masquer les champs de formulaire sur mobile; assurer la pleine largeur */
     .input-group {
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    /* Réduire l'encombrement des cartes sur mobile */
+    .search-tool-card {
+        padding: 16px !important;
+    }
+
+    /* Masquer la vidéo de fond pour gagner en performance/données sur mobile */
+    #bg-video {
         display: none;
     }
 
@@ -191,6 +221,7 @@ noscript .image-gallery img {
         margin-bottom: 5px;
     }
 }
+
 
 /* Styles Responsives pour les Écrans d'Ordinateur (>= 768px) */
 @media (min-width: 768px) {
@@ -227,3 +258,4 @@ noscript .image-gallery img {
         text-align: right !important;
     }
 }
+
