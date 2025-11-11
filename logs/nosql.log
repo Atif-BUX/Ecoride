@@ -1,0 +1,4 @@
+{"collection":"reservations","doc":{"event":"reserve","status":"pending","travel_id":6,"user_id":4,"seats":1,"ts":"2025-11-08T16:01:09+01:00"}}
+{"collection":"reservations","doc":{"event":"reserve","status":"confirmed","travel_id":6,"user_id":4,"seats":1,"ts":"2025-11-08T16:02:55+01:00"}}
+{"collection":"needs","doc":{"event":"need","user_id":5,"departure":"Chantilly","arrival":"Paris","date":"2025-11-22","note":"Pour un départ à 9 heures si possible. Merci.","ts":"2025-11-08T16:46:17+01:00"}}
+{"collection":"needs","doc":{"event":"need","user_id":5,"departure":"Chantilly","arrival":"Paris","date":"2025-11-22","note":"Pour un départ à 9 heures si possible. Merci.","ts":"2025-11-08T17:43:37+01:00"}}

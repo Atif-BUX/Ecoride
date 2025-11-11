@@ -1,0 +1,30 @@
+     * @return array Une liste des trajets.
+     */
+    public function getUserTravels(int $userId): array {
+        $sql = "
+       SELECT
+           id,
+           departure_city,
+           arrival_city,
+           departure_date,
+           departure_time,
+           price_per_seat,
+           available_seats,
+           COALESCE(total_seats, available_seats) AS total_seats
+       FROM
+           travels
+       WHERE
+           user_id = :userId
+       ORDER BY
+           departure_date DESC, departure_time DESC
+       ";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { // Utilisation de la classe complète \PDOException
+            error_log("DB Error in getUserTravels: " . $e->getMessage());
+            return [];
+        }
+    }

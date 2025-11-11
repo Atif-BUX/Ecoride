@@ -1,0 +1,27 @@
+                    </a>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="alert alert-info text-center py-4 my-3" role="alert">
+                    <h4 class="alert-heading">Aucun trajet trouvé 😔</h4>
+                    <p>
+                        Désolé, nous n'avons trouvé aucun trajet correspondant à votre recherche.
+                    </p>
+                    <hr>
+
+
+                    <p class="mb-2">
+                        Vous êtes passager ? <a href="#" onclick="alert('Cette fonctionnalité est en cours de développement. Bientôt, vous pourrez être notifié lorsqu\'un trajet correspondant sera disponible !')" class="alert-link fw-bold" style="color: var(--color-primary-dark);">Cliquez ici pour exprimer votre besoin</a>.
+                    </p>
+
+
+                    <p class="mb-0">
+                        Vous êtes conducteur ?
+                        <?php if ($is_logged_in): ?>
+                            <a href="proposer_trajet.php" class="alert-link fw-bold" style="color: var(--color-primary-dark);">Proposez votre trajet maintenant</a> pour aider d'autres membres !
+                        <?php else: ?>
+                            <a href="connexion.php" class="alert-link fw-bold" style="color: var(--color-primary-dark);">Connectez-vous</a> pour proposer un trajet.
+                        <?php endif; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+

@@ -1,0 +1,6 @@
+AddDefaultCharset UTF-8
+
+# Serve Web App Manifest with the right MIME type and charset
+AddType application/manifest+json .webmanifest
+AddCharset UTF-8 .webmanifest
+

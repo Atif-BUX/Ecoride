@@ -1,0 +1,281 @@
+@charset "UTF-8";
+/* CSS Document 2025 for project Studi "EcoRide" designed by Mr Atif BUX */
+:root {
+    --color-primary-dark: #1e8449; /* #00CC00; <-- More brighter */
+    --color-primary-light: #32CD32;
+    --color-secondary-yellow: #FFD700;
+    --color-neutral-white: #FFFFFF;
+    --color-neutral-gray: #333333;
+    /* Opacité réduite à 0.8 pour mieux voir la vidéo derrière */
+    --color-background-light-transparent: rgba(236, 254, 242, 0.8);
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Layout: sticky footer full width */
+html, body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.main-header {
+    background-color: var(--color-primary-dark);
+}
+
+/* --- AJOUT POUR L'ICÔNE DU MENU HAMBURGER EN BLANC --- */
+.navbar-toggler-icon {
+    /* Utilise une image SVG Bootstrap customisée pour la rendre blanche */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.navbar-toggler {
+    border: none !important;
+}
+
+/* ------------------------------------------------------------------------- */
+
+
+/* --- STYLES POUR LA ZONE PRINCIPALE TRANS PARENTE ET ENCADRÉE --- */
+.main-content-area {
+    /* Applique la couleur semi-transparente */
+    background-color: var(--color-background-light-transparent);
+
+    /* Gère la superposition au-dessus de la vidéo */
+    position: relative;
+    z-index: 1;
+
+    /* Ajout d'une ombre légère pour décoller du fond vidéo */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+
+    /* Marge par défaut pour mobile */
+    margin: 20px auto;
+
+    /* Padding pour l'espace intérieur */
+    padding: 20px 0;
+
+    /* Largeur par défaut pour mobile */
+    width: 95%;
+
+    /* Arrondis discrets pour l'effet "bloc" */
+    border-radius: 8px;
+}
+
+/* ------------------------------------------------------------------------- */
+
+.main-footer {
+    background-color: var(--color-neutral-gray);
+    width: 100%;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+h1 {
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+h2 {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+p {
+    font-weight: 400;
+    color: var(--color-neutral-gray);
+}
+
+.main-footer p {
+    color: var(--color-neutral-white);
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-primary-dark);
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--color-primary-light);
+}
+
+/* Lisibilité des liens dans les aides (form-text, text-muted) */
+.form-text a,
+small.form-text a,
+.text-muted a {
+    color: var(--color-primary-dark) !important;
+    text-decoration: underline;
+}
+.form-text a:hover,
+small.form-text a:hover,
+.text-muted a:hover {
+    color: var(--color-primary-light) !important;
+}
+.form-text a:focus,
+small.form-text a:focus,
+.text-muted a:focus {
+    outline: 2px dashed var(--color-primary-light);
+    outline-offset: 2px;
+}
+
+.main-footer a {
+    color: var(--color-neutral-white);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.main-footer a:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
+.nav-link {
+    color: var(--color-neutral-white) !important;
+}
+
+.nav-link:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
+.main-btn {
+    background-color: var(--color-primary-light);
+    color: var(--color-neutral-white);
+    font-weight: 600;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.main-btn:hover {
+    background-color: #248c24;
+}
+
+/* --- Styles de la Vidéo --- */
+#bg-video {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.6;
+}
+
+main {
+    /* Padding par défaut conservé pour l'espace intérieur */
+    padding: 20px 0;
+}
+
+/* La carte de recherche */
+.search-tool-card {
+    /* Nouvelle couleur de fond avec transparence (Alpha=0.9, soit 90% d'opacité) */
+    /* C'est un blanc presque opaque, laissant juste entrevoir la vidéo. */
+    background-color: rgba(255, 255, 255, 0.8);
+
+    border-radius: 12px;
+    /* Assurez-vous d'utiliser la bonne ombre si vous en avez une */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.image-gallery img {
+    border: 3px solid var(--color-primary-light);
+    border-radius: 0.5rem;
+    opacity: 1;
+}
+
+.search-tool-card {
+    background-color: var(--color-neutral-white);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.main-footer .footer-link {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.main-footer .footer-link:hover {
+    color: var(--color-secondary-yellow) !important;
+}
+
+.main-footer .footer-bottom {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+noscript .image-gallery img {
+    opacity: 1 !important;
+}
+
+/* --- MEDIA QUERIES pour le Responsive --- */
+
+@media (max-width: 576px) {
+    /* Ne pas masquer les champs de formulaire sur mobile; assurer la pleine largeur */
+    .input-group {
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    /* Réduire l'encombrement des cartes sur mobile */
+    .search-tool-card {
+        padding: 16px !important;
+    }
+
+    /* Masquer la vidéo de fond pour gagner en performance/données sur mobile */
+    #bg-video {
+        display: none;
+    }
+
+    .footer-top {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-top p {
+        margin-bottom: 5px;
+    }
+}
+
+
+/* Styles Responsives pour les Écrans d'Ordinateur (>= 768px) */
+@media (min-width: 768px) {
+    /* Encadrement et centrage de la zone principale sur bureau */
+    .main-content-area {
+        /* Augmentation de la largeur pour s'aligner sur l'en-tête (1140px est une largeur commune pour Bootstrap) */
+        max-width: 1140px;
+        width: 90%;
+        margin: 50px auto;
+    }
+
+    /* Contenu principal: Assure que la section Mission reste centrée et lisible */
+    .mission-section p {
+        width: 65% !important;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Pied de Page (Footer) - Optimisation Bureau */
+    .main-footer .container {
+        max-width: 1200px;
+    }
+
+    .footer-top {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .footer-top p.text-start {
+        text-align: left !important;
+    }
+
+    .footer-top p.text-end {
+        text-align: right !important;
+    }
+}
+

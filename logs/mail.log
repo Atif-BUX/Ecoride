@@ -1,0 +1,6 @@
+[2025-11-08 16:02:46] TO:test@gmail.com | SUBJECT:Annulation de votre réservation | Votre réservation pour le trajet #6 a été annulée.
+[2025-11-08 16:02:46] TO:jean.dupont@test.fr | SUBJECT:Réservation annulée (passager) | Une réservation (trajet #6) a été annulée par le passager.
+[2025-11-09T10:34:19+01:00] password_reset to=test@gmail.com subject=EcoRide — Réinitialisation du mot de passe link=http://localhost/EcoRide/reinitialiser_mot_de_passe.php?token=80365fdb20ac7066496c1d2c97351c9e70ab80d47f0087ff4c3dcba39a2d594d
+[2025-11-09T10:39:46+01:00] password_reset to=jean.dupont@test.fr subject=EcoRide — Réinitialisation du mot de passe link=http://localhost/EcoRide/reinitialiser_mot_de_passe.php?token=5c02347b622833e25b1155518a6d74c5d0200d1616197cab107760964efe83ce
+[2025-11-09T10:48:24+01:00] password_reset to=jean.dupont@test.fr subject=EcoRide — Réinitialisation du mot de passe link=http://localhost/EcoRide/reinitialiser_mot_de_passe.php?token=67447093a4f5995f81b7498ed95bb31120f706e55e2773bd6029df3aeaee3624
+[2025-11-09T10:59:31+01:00] password_reset to=jean.dupont@test.fr subject=EcoRide — Réinitialisation du mot de passe link=http://localhost/EcoRide/reinitialiser_mot_de_passe.php?token=bfa68ee21f22763b939b8915cb0131e946e01fa174a46b8ca64ef6d2052eb442
