@@ -6,7 +6,7 @@ Format
 - Dates use YYYY‑MM‑DD.
 - Versions follow SemVer where possible (MAJOR.MINOR.PATCH).
 
-## [0.9.0] - 2025-11-07
+## [0.9.0] - 2025-11-11
 - Database import guidance for XAMPP/MariaDB (collation compatibility and PowerShell commands).
 - Switched reservations to a pending → confirm flow with transactional confirm step.
 - Added optional auto‑confirm parameter (`booking_auto_confirm`).

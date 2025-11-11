@@ -1,7 +1,7 @@
 EcoRide — Installation locale et parcours de réservation
 
 Liens utiles
-- Dépôt GitHub : https://github.com/Atif-BUX/Studi
+- Dépôt GitHub : https://github.com/Atif-BUX/Ecoride
 - Démo (Live) : https://ecoride.atifbux.fr
 
 Présentation
