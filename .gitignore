@@ -6,6 +6,7 @@
 # OS artifacts
 Thumbs.db
 desktop.ini
+.DS_Store
 
 # Logs & runtime outputs
 logs/
@@ -18,6 +19,8 @@ logs/
 *.tmp
 tmp_*
 temp_*
+*.sql
+*.docx
 *.sql.bak
 
 # Node / vendor caches (if any)
