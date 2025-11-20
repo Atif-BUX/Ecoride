@@ -1,5 +1,5 @@
 <?php
-// Fichier: src/TravelManager.php - 02/11/2025 - 18:15
+// Fichier: src/TravelManager.php - 20/11/2025 - 13:15
 
 require_once __DIR__ . '/CreditManager.php';
 require_once __DIR__ . '/SystemParameterManager.php';
