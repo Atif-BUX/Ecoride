@@ -35,15 +35,54 @@ class Csrf
 
     private static function sameOrigin(): bool
     {
-        $host = $_SERVER['HTTP_HOST'] ?? '';
+        [$host, $port] = self::requestOriginParts();
+
         if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] !== '') {
-            $o = parse_url($_SERVER['HTTP_ORIGIN']);
-            return isset($o['host']) && strcasecmp($o['host'], $host) === 0;
+            return self::matchesOrigin(parse_url($_SERVER['HTTP_ORIGIN']), $host, $port);
         }
         if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER'] !== '') {
-            $r = parse_url($_SERVER['HTTP_REFERER']);
-            return isset($r['host']) && strcasecmp($r['host'], $host) === 0;
+            return self::matchesOrigin(parse_url($_SERVER['HTTP_REFERER']), $host, $port);
         }
+        return true;
+    }
+
+    private static function requestOriginParts(): array
+    {
+        $hostHeader = $_SERVER['HTTP_HOST'] ?? '';
+        $host = $hostHeader;
+        $port = null;
+
+        if (strpos($hostHeader, ':') !== false) {
+            [$host, $port] = explode(':', $hostHeader, 2);
+        } elseif (isset($_SERVER['SERVER_PORT'])) {
+            $port = (int) $_SERVER['SERVER_PORT'];
+        }
+
+        $host = strtolower($host);
+        if ($port !== null) {
+            $port = (int) $port;
+        }
+
+        return [$host, $port];
+    }
+
+    private static function matchesOrigin(array|false $parts, string $host, ?int $port): bool
+    {
+        if ($parts === false || empty($parts['host'])) {
+            return false;
+        }
+
+        $candidateHost = strtolower($parts['host']);
+        $candidatePort = isset($parts['port']) ? (int) $parts['port'] : null;
+
+        if ($candidateHost !== $host) {
+            return false;
+        }
+
+        if ($port !== null && $candidatePort !== null && $port !== $candidatePort) {
+            return false;
+        }
+
         return true;
     }
 

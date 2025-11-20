@@ -1,6 +1,7 @@
 <?php
-// Basic shared header. Assumes bootstrap.php already required.
-?><!DOCTYPE html>
+// Basic shared header. Assumes includes/bootstrap.php already required so session and helpers exist.
+?>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -35,7 +36,14 @@
                     <li class="nav-item"><a class="nav-link" href="covoiturages.php">Covoiturages</a></li>
                     <li class="nav-item"><a class="nav-link" href="proposer_trajet.php">Proposer</a></li>
                     <li class="nav-item"><a class="nav-link" href="profil.php">Profil</a></li>
-                    <?php if (isLoggedIn()): ?>
+                    <?php if (function_exists('userHasRole') && userHasRole('EMPLOYE')): ?>
+                        <li class="nav-item"><a class="nav-link" href="employe_reviews.php">Modération</a></li>
+                    <?php endif; ?>
+                    <?php if (function_exists('userHasRole') && userHasRole('ADMIN')): ?>
+                        <li class="nav-item"><a class="nav-link" href="admin_dashboard.php">Admin</a></li>
+                        <li class="nav-item"><a class="nav-link" href="admin_params.php">Paramètres</a></li>
+                    <?php endif; ?>
+                    <?php if (function_exists('isLoggedIn') && isLoggedIn()): ?>
                         <li class="nav-item"><a class="nav-link" href="deconnexion.php">Déconnexion</a></li>
                     <?php else: ?>
                         <li class="nav-item"><a class="nav-link" href="connexion.php">Connexion</a></li>
@@ -44,4 +52,5 @@
             </div>
         </div>
     </nav>
+    
 </header>

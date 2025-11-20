@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <style>
+    .box { fill:#ffffff; stroke:#1e8449; stroke-width:2; rx:8; ry:8; }
+    .title { font-family: Montserrat, Arial, sans-serif; font-size:16px; font-weight:700; fill:#1e8449; }
+    .field { font-family: Montserrat, Arial, sans-serif; font-size:12px; fill:#333333; }
+    .note  { font-family: Montserrat, Arial, sans-serif; font-size:12px; fill:#666666; }
+    .line  { stroke:#888; stroke-width:1.5; marker-end:url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- USERS -->
+  <rect class="box" x="40" y="40" width="260" height="170"/>
+  <text class="title" x="50" y="65">users</text>
+  <text class="field" x="50" y="90">id (PK), email (UNIQUE), password</text>
+  <text class="field" x="50" y="110">first_name, last_name, credit_balance</text>
+  <text class="field" x="50" y="130">is_driver, is_passenger, is_active</text>
+  <text class="field" x="50" y="150">photo (BLOB/path), photo_mime_type</text>
+
+  <!-- ROLES / USER_ROLES -->
+  <rect class="box" x="40" y="250" width="200" height="120"/>
+  <text class="title" x="50" y="275">roles</text>
+  <text class="field" x="50" y="300">id (PK)</text>
+  <text class="field" x="50" y="320">label (UNIQUE)</text>
+
+  <rect class="box" x="260" y="250" width="260" height="120"/>
+  <text class="title" x="270" y="275">user_roles</text>
+  <text class="field" x="270" y="300">user_id (FK → users.id)</text>
+  <text class="field" x="270" y="320">role_id (FK → roles.id)</text>
+
+  <!-- VEHICLES -->
+  <rect class="box" x="40" y="420" width="260" height="140"/>
+  <text class="title" x="50" y="445">vehicles</text>
+  <text class="field" x="50" y="470">id (PK), user_id (FK)</text>
+  <text class="field" x="50" y="490">brand_id, model, color, energy</text>
+  <text class="field" x="50" y="510">license_plate (UNIQUE)</text>
+
+  <!-- TRAVELS -->
+  <rect class="box" x="460" y="40" width="300" height="190"/>
+  <text class="title" x="470" y="65">travels</text>
+  <text class="field" x="470" y="90">id (PK), user_id (FK → users.id)</text>
+  <text class="field" x="470" y="110">departure_city, arrival_city</text>
+  <text class="field" x="470" y="130">departure_date, departure_time</text>
+  <text class="field" x="470" y="150">available_seats, total_seats</text>
+  <text class="field" x="470" y="170">price_per_seat, status, car_details</text>
+
+  <!-- RESERVATIONS -->
+  <rect class="box" x="820" y="40" width="320" height="190"/>
+  <text class="title" x="830" y="65">reservations</text>
+  <text class="field" x="830" y="90">id (PK), travel_id (FK → travels.id)</text>
+  <text class="field" x="830" y="110">user_id (passenger, FK → users.id)</text>
+  <text class="field" x="830" y="130">seats_booked, status (pending/confirmed)</text>
+  <text class="field" x="830" y="150">booking_date, confirmed_at</text>
+  <text class="field" x="830" y="170">credit_spent, driver_credit</text>
+
+  <!-- REVIEWS -->
+  <rect class="box" x="460" y="270" width="300" height="120"/>
+  <text class="title" x="470" y="295">reviews</text>
+  <text class="field" x="470" y="320">id (PK), reviewer_user_id (FK)</text>
+  <text class="field" x="470" y="340">reviewed_user_id (FK), rating, status</text>
+
+  <!-- CREDITS -->
+  <rect class="box" x="820" y="270" width="320" height="120"/>
+  <text class="title" x="830" y="295">credit_transactions</text>
+  <text class="field" x="830" y="320">id (PK), user_id (FK)</text>
+  <text class="field" x="830" y="340">type, amount, note, created_at</text>
+
+  <!-- PARAMETERS -->
+  <rect class="box" x="460" y="430" width="300" height="140"/>
+  <text class="title" x="470" y="455">configurations / parameters</text>
+  <text class="field" x="470" y="480">configurations(id, label)</text>
+  <text class="field" x="470" y="500">parameters(id, property, default_value)</text>
+  <text class="field" x="470" y="520">configuration_parameters(configuration_id, parameter_id, value)</text>
+  <text class="note"  x="470" y="540">ex: booking_auto_confirm</text>
+
+  <!-- Relations -->
+  <line class="line" x1="300" y1="125" x2="460" y2="120" /> <!-- users → travels -->
+  <line class="line" x1="760" y1="120" x2="820" y2="120" /> <!-- travels → reservations -->
+  <line class="line" x1="300" y1="125" x2="260" y2="310" /> <!-- users → user_roles -->
+  <line class="line" x1="240" y1="310" x2="260" y2="310" /> <!-- roles → user_roles (from right edge) -->
+  <line class="line" x1="300" y1="490" x2="460" y2="135" /> <!-- vehicles (user) → travels (driver) -->
+  <line class="line" x1="300" y1="490" x2="460" y2="500" /> <!-- vehicles user relation to configs (context line) -->
+  <line class="line" x1="980" y1="330" x2="300" y2="120" /> <!-- credit_transactions → users -->
+  <line class="line" x1="610" y1="330" x2="300" y2="120" /> <!-- reviews → users -->
+</svg>

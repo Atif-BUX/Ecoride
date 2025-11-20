@@ -12,6 +12,7 @@ $success_message = null; // Message de succès pour les réservations
 $travel_id = null;
 $departure_date_formatted = null;
 $departure_time_formatted = null;
+$credit_cost_per_seat = null;
 
 // 3. Inclusion des classes et connexion à la DB
 require_once __DIR__ . '/src/Database.php';
@@ -20,7 +21,9 @@ if (file_exists(__DIR__ . '/src/Csrf.php')) { require_once __DIR__ . '/src/Csrf.
 
 $pdo = Database::getConnection();
 $travelManager = $pdo ? new TravelManager($pdo) : null;
+$creditManager = $pdo ? new CreditManager($pdo) : null;
 $user_id = $is_logged_in ? (int)($_SESSION['user_id'] ?? 0) : 0;
+$user_credit_balance = ($is_logged_in && $creditManager) ? $creditManager->getBalance($user_id) : null;
 
 // 4. Récupération et validation de l'ID du trajet
 $travel_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -58,6 +61,7 @@ if (!$pdo) {
             $travel_details['no_seats'] = true;
         }
 
+        $credit_cost_per_seat = (int)ceil((float)$travel_details['price_per_seat']);
         // Stocker l'ID du conducteur pour la comparaison
         $driver_id = $travel_details['user_id'];
         // Charger la réservation de l'utilisateur si connecté
@@ -85,15 +89,35 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
         } elseif ((int)$travel_details['available_seats'] < $seats_to_book) {
             $error_message = "Pas assez de places disponibles.";
         } else {
+            $credit_needed = (int)ceil((float)$travel_details['price_per_seat'] * $seats_to_book);
+            if ($creditManager && !$creditManager->hasSufficientBalance($user_id, $credit_needed)) {
+                $error_message = "Crédits insuffisants ({$credit_needed} crédits nécessaires).";
+            } else {
             $ok = $travelManager->reserveSeats((int)$travel_id, $user_id, (int)$seats_to_book);
             if ($ok) {
-                $success_message = $seats_to_book > 1 ? "Réservation confirmée (".$seats_to_book." places)." : "Réservation confirmée.";
+                $success_message = ($seats_to_book > 1 ? "Réservation confirmée ({$seats_to_book} places)." : "Réservation confirmée.") . " {$credit_needed} crédits débités.";
                 // Recharger les détails pour refléter la nouvelle dispo
                 $travel_details = $travelManager->getTravelContactDetails((int)$travel_id);
+                $credit_cost_per_seat = (int)ceil((float)$travel_details['price_per_seat']);
                 $user_reservation = $travelManager->getReservationForUser((int)$travel_id, $user_id);
+                // Ajuste le message selon le statut réel
+                if (isset($user_reservation['status']) && $user_reservation['status'] === 'confirmed') {
+                    $success_message = ($seats_to_book > 1 ? "Réservation confirmée ({$seats_to_book} places)." : "Réservation confirmée.") . " {$credit_needed} crédits débités.";
+                } else {
+                    $success_message = ($seats_to_book > 1 ? "Réservation en attente ({$seats_to_book} places)." : "Réservation en attente.") . " Aucun crédit débité pour l'instant.";
+                }
+                if ($creditManager) { $user_credit_balance = $creditManager->getBalance($user_id); }
             } else {
                 $error_message = "Échec de la réservation. Veuillez réessayer.";
             }
+        }
+
+        // Déterminer si le trajet est passé
+        $is_past = false;
+        try {
+            $depDT = new DateTime(trim(($travel_details['departure_date'] ?? '') . ' ' . ($travel_details['departure_time'] ?? '00:00:00')));
+            $is_past = ($depDT < new DateTime());
+        } catch (Throwable $e) { $is_past = false; }
         }
     } elseif ($_POST['action'] === 'cancel_reservation') {
         if (!$is_logged_in) {
@@ -105,11 +129,29 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
         } else {
             $ok = $travelManager->cancelReservation((int)$travel_id, $user_id);
             if ($ok) {
-                $success_message = "Réservation annulée.";
+                $success_message = "Réservation annulée. Vos crédits ont été remboursés.";
                 $travel_details = $travelManager->getTravelContactDetails((int)$travel_id);
+                $credit_cost_per_seat = (int)ceil((float)$travel_details['price_per_seat']);
                 $user_reservation = null;
+                if ($creditManager) { $user_credit_balance = $creditManager->getBalance($user_id); }
             } else {
                 $error_message = "Échec de l'annulation. Veuillez réessayer.";
+            }
+        }
+    } elseif ($_POST['action'] === 'confirm_reservation') {
+        if (!$is_logged_in) {
+            $error_message = "Vous devez être connecté pour confirmer.";
+        } elseif (!$travel_details) {
+            $error_message = "Trajet introuvable.";
+        } else {
+            $ok = $travelManager->confirmReservation((int)$travel_id, $user_id);
+            if ($ok) {
+                $success_message = "Réservation confirmée. Vos crédits ont été débités.";
+                $travel_details = $travelManager->getTravelContactDetails((int)$travel_id);
+                $user_reservation = $travelManager->getReservationForUser((int)$travel_id, $user_id);
+                if ($creditManager) { $user_credit_balance = $creditManager->getBalance($user_id); }
+            } else {
+                $error_message = "Échec de la confirmation. Vérifiez la disponibilité et votre solde.";
             }
         }
     } elseif ($_POST['action'] === 'update_reservation') {
@@ -146,55 +188,12 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <?php $page_title='Détails du trajet — EcoRide'; $page_desc="Consultez les informations détaillées d\'un trajet et réservez en toute simplicité."; require __DIR__ . '/includes/layout/seo.php'; ?>
     
 </head>
 <body class="bg-light">
 
-<header class="main-header text-white py-3 sticky-top">
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
-                    <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
-                    <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
-                        <line x1="50" y1="5" x2="50" y2="95" />
-                        <line x1="15" y1="27" x2="85" y2="73" />
-                        <line x1="85" y1="27" x2="15" y2="73" />
-                    </g>
-                    <text class="logo-text" x="50" y="60" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="45" font-weight="bold" fill="#FFFFFF">ER</text>
-                </svg>
-                <span class="text-white fw-bold">EcoRide</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="covoiturages.php">Covoiturages</a>
-                    </li>
-
-                    <?php if ($is_logged_in): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="proposer_trajet.php">Proposer</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="profil.php">Profil</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="deconnexion.php">Déconnexion</a>
-                        </li>
-                    <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="connexion.php">Connexion</a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
+<?php require __DIR__ . '/includes/layout/navbar.php'; ?>
 
 <main class="container py-5">
     <div class="row justify-content-center">
@@ -241,11 +240,25 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
                                    / <?= htmlspecialchars($travel_details['total_seats'] ?? $travel_details['available_seats']) ?>
                                 </span>
                             </div>
+                            <?php if ($is_logged_in): ?>
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-coins me-2"></i>
+                                        Ce trajet coûte <?= $credit_cost_per_seat ?> crédit(s) par place.
+                                        Votre solde : <?= (int)($user_credit_balance ?? 0) ?> crédit(s).
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <hr>
 
                         <?php if ($is_logged_in && isset($driver_id) && (int)$_SESSION['user_id'] !== (int)$driver_id): ?>
+                            <?php if (!empty($is_past) && $is_past): ?>
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fas fa-info-circle me-1"></i> Ce trajet est passé. Les réservations ne sont plus possibles.
+                                </div>
+                            <?php else: ?>
                             <?php if (!empty($user_reservation)): ?>
                                 <div class="alert alert-success" role="alert">
                                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
@@ -254,6 +267,15 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
                                             Réservation active: <?= (int)$user_reservation['seats_booked'] ?> place(s).
                                         </div>
                                         <div class="d-flex gap-2">
+                                            <?php if (($user_reservation['status'] ?? '') === 'pending'): ?>
+                                                <form method="POST" action="detail_trajet.php?id=<?= (int)$travel_id ?>" class="mb-0">
+                                                    <?= class_exists('Csrf') ? Csrf::input() : '' ?>
+                                                    <input type="hidden" name="action" value="confirm_reservation">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check me-1"></i> Confirmer
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
                                             <form method="POST" action="detail_trajet.php?id=<?= (int)$travel_id ?>" class="mb-0 d-flex align-items-end gap-2">
                                                 <?= class_exists('Csrf') ? Csrf::input() : '' ?>
                                                 <input type="hidden" name="action" value="update_reservation">
@@ -291,6 +313,7 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
                                     </div>
                                 </form>
                             <?php endif; ?>
+                            <?php endif; ?>
                         <?php elseif ($is_logged_in && isset($driver_id) && (int)$_SESSION['user_id'] === (int)$driver_id): ?>
                             <div class="alert alert-info" role="alert">
                                 Vous êtes le conducteur de ce trajet.
@@ -324,10 +347,25 @@ if ($pdo && $travelManager && $_SERVER["REQUEST_METHOD"] === 'POST' && isset($_P
                         </h3>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2 fw-bold">
-                            <!-- Sécurité : htmlspecialchars() -->
-                            <?= htmlspecialchars($travel_details['first_name']) ?> <?= htmlspecialchars($travel_details['last_name']) ?>
-                        </p>
+                        <?php
+                            $driverPhoto = null;
+                            if (!empty($travel_details['user_photo_bin'])) {
+                                $m = !empty($travel_details['user_photo_mime']) ? $travel_details['user_photo_mime'] : 'image/jpeg';
+                                $driverPhoto = 'data:' . $m . ';base64,' . base64_encode($travel_details['user_photo_bin']);
+                            } elseif (!empty($travel_details['user_photo_path'])) {
+                                $driverPhoto = $travel_details['user_photo_path'];
+                            }
+                        ?>
+                        <div class="d-flex align-items-center mb-2">
+                            <?php if ($driverPhoto): ?>
+                                <img src="<?= htmlspecialchars($driverPhoto) ?>" alt="Photo conducteur" class="rounded-circle me-3" style="width: 56px; height: 56px; object-fit: cover; border: 2px solid var(--color-primary-light);">
+                            <?php else: ?>
+                                <i class="fas fa-user-circle fa-2x text-success me-2"></i>
+                            <?php endif; ?>
+                            <p class="mb-0 fw-bold">
+                                <?= htmlspecialchars($travel_details['first_name']) ?> <?= htmlspecialchars($travel_details['last_name']) ?>
+                            </p>
+                        </div>
 
                         <?php if ($is_logged_in): ?>
                             <?php

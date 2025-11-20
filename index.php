@@ -24,61 +24,31 @@ $firstname = $is_logged_in ? ($_SESSION['user_firstname'] ?? 'Utilisateur') : 'V
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <?php $page_title = 'EcoRide - Plateforme de Covoiturage Écologique'; $page_desc = "Trouvez ou proposez un covoiturage simplement avec EcoRide, la plateforme écoresponsable."; require __DIR__ . '/includes/layout/seo.php'; ?>
+    <style>
+        .hero-heading,
+        .hero-slogan,
+        .section-heading {
+            color: #2c2c2c;
+        }
+        .highlight-green {
+            color: var(--color-primary-dark);
+        }
+    </style>
 </head>
 <body class="bg-light">
 <video autoplay muted loop playsinline id="bg-video">
     <source src="medias/ontheroad.mp4" type="video/mp4">
 </video>
-<header class="main-header text-white py-3 sticky-top">
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <svg id="logo-animation" width="40" height="40" viewBox="0 0 100 100" class="me-2">
-                    <circle class="wheel-circle" cx="50" cy="50" r="45" stroke="#32CD32" stroke-width="5" fill="none" />
-                    <g class="wheel-spokes" stroke="#32CD32" stroke-width="4" stroke-linecap="round">
-                        <line x1="50" y1="5" x2="50" y2="95" />
-                        <line x1="15" y1="27" x2="85" y2="73" />
-                        <line x1="85" y1="27" x2="15" y2="73" />
-                    </g>
-                    <text class="logo-text" x="50" y="60" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="45" font-weight="bold" fill="#FFFFFF">ER</text>
-                </svg>
-                <span class="text-white fw-bold">EcoRide</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="covoiturages.php">Covoiturages</a>
-                    </li>
-
-                    <?php if ($is_logged_in): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="proposer_trajet.php">Proposer</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="deconnexion.php">Déconnexion</a>
-                        </li>
-                    <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="connexion.php">Connexion</a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
+<?php require __DIR__ . '/includes/layout/navbar.php'; ?>
 
 <main class="container py-5">
-    <h1 class="text-center mb-4">Bienvenue, <?php echo htmlspecialchars($firstname); ?> !</h1>
+    <h1 class="text-center mb-4 hero-heading">Bienvenue, <span class="highlight-green"><?php echo htmlspecialchars($firstname); ?></span> !</h1>
     <p class="text-center lead">Trouvez ou proposez votre prochain covoiturage.</p>
 
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bolder mb-3" style="color: var(--color-primary-dark);" id="slogan-animation">
-            Voyagez Vert, Voyagez Ensemble.
+        <h1 class="display-4 fw-bolder mb-3 hero-slogan" id="slogan-animation">
+            Voyagez <span class="highlight-green">Vert</span>, Voyagez Ensemble.
         </h1>
         <p class="lead text-muted">
             Votre solution de covoiturage simple, économique et écologique.
@@ -138,7 +108,7 @@ $firstname = $is_logged_in ? ($_SESSION['user_firstname'] ?? 'Utilisateur') : 'V
     </div>
 
     <section class="mb-5">
-        <h2 class="text-center mb-4" style="color: var(--color-primary-dark);">Pourquoi EcoRide ?</h2>
+        <h2 class="text-center mb-4 section-heading">Pourquoi EcoRide ?</h2>
         <div class="row text-center">
             <div class="col-md-4 mb-4">
                 <i class="fas fa-leaf display-4 mb-3" style="color: var(--color-primary-light);"></i>
@@ -159,16 +129,16 @@ $firstname = $is_logged_in ? ($_SESSION['user_firstname'] ?? 'Utilisateur') : 'V
     </section>
 
     <section class="image-gallery py-4">
-        <h2 class="text-center mb-4" style="color: var(--color-primary-dark);">La Communauté EcoRide</h2>
+        <h2 class="text-center mb-4 section-heading">La Communauté EcoRide</h2>
         <div class="row g-4">
             <div class="col-12 col-md-4">
-                <img src="graphics/heureux-amis.jpg" class="img-fluid rounded shadow" alt="Covoiturage en ville">
+                <img src="graphics/heureux-amis.webp" class="img-fluid rounded shadow" alt="Covoiturage en ville">
             </div>
             <div class="col-12 col-md-4">
-                <img src="graphics/couple-voyage.jpg" class="img-fluid rounded shadow" alt="Voyage longue distance">
+                <img src="graphics/couple-voyage.webp" class="img-fluid rounded shadow" alt="Voyage longue distance">
             </div>
             <div class="col-12 col-md-4">
-                <img src="graphics/amis-ensemble.jpg" class="img-fluid rounded shadow" alt="Aide au chargement des bagages">
+                <img src="graphics/amis-ensemble.webp" class="img-fluid rounded shadow" alt="Aide au chargement des bagages">
             </div>
         </div>
     </section>

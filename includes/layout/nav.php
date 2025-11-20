@@ -1,5 +1,5 @@
 <?php
-// Shared navigation bar (header only). Self-contained for now.
+// Shared navigation bar (header only). Self-contained.
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 $is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true;
 ?>
@@ -27,6 +27,9 @@ $is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] ==
                     <?php if ($is_logged_in): ?>
                         <li class="nav-item"><a class="nav-link" href="proposer_trajet.php">Proposer</a></li>
                         <li class="nav-item"><a class="nav-link" href="profil.php">Profil</a></li>
+                        <?php if (function_exists('userHasRole') && userHasRole('ADMIN')): ?>
+                            <li class="nav-item"><a class="nav-link" href="admin_params.php">Paramètres</a></li>
+                        <?php endif; ?>
                         <li class="nav-item"><a class="nav-link" href="deconnexion.php">Déconnexion</a></li>
                     <?php else: ?>
                         <li class="nav-item"><a class="nav-link" href="connexion.php">Connexion</a></li>
@@ -37,3 +40,4 @@ $is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] ==
         </div>
     </nav>
 </header>
+

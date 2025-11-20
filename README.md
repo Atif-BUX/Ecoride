@@ -1,32 +1,45 @@
 EcoRide — Installation locale et parcours de réservation
 
 Liens utiles
-- Dépôt GitHub : https://github.com/Atif-BUX/Studi
-- Démo (GitHub Pages) : https://atif-bux.github.io/Studi/
-- Démo alternative : https://ecoridebyatif.onrender.com/
+- Dépôt GitHub : https://github.com/Atif-BUX/Ecoride
+- Démo (Live) : https://ecoride.atifbux.fr
 
 Présentation
 - EcoRide est une application PHP + MariaDB (XAMPP) de covoiturage écoresponsable. Les utilisateurs peuvent rechercher des trajets, réserver et utiliser un système de crédits avec gains conducteur.
 
+Note importante (CSRF + ports locaux)
+- Depuis le 04/12/2024, `src/Csrf.php` a été corrigé pour accepter les ports personnalisés (type `localhost:8888`). Sans cette mise à jour, les formulaires POST affichent « Session expirée. Veuillez réessayer. ».
+- Assurez-vous d’avoir la dernière version du fichier (pull Git, ou copier `src/Csrf.php` depuis ce dépôt) avant de tester l’application sur MAMP/XAMPP ou sur un port non standard.
+- En attendant la mise à jour, seule une exécution sur port 80/443 permettra de contourner le problème, mais l’application n’est alors pas protégée correctement contre les attaques CSRF.
+
 Installation locale (Windows + XAMPP)
 - Installer XAMPP puis démarrer Apache + MySQL depuis le panneau XAMPP.
-- Chemin du client MySQL utilisé ci‑dessous : `C:\xampp\mysql\bin\mysql.exe`
-- Ouvrir VS Code → Terminal (PowerShell 7 convient — `PSVersionTable.PSVersion`).
+- Chemin du client MySQL utilisé ci‑dessous : `C:\xampp\mysql\bin\mysql.exe`
+- Code & Terminal : VS Code & PowerShell 
+
+Installation rapide (Docker Compose)
+- Prérequis : Docker Desktop (ou équivalent) installé et démarré.
+- Copier `.env.example` vers `.env.local` puis définir les variables suivantes pour pointer vers les conteneurs :
+  - `DB_HOST=db`
+  - `DB_USER=ecoride`
+  - `DB_PASS=ecoride`
+  - `DB_PORT=3306`
+- Construire et lancer la stack (Apache/PHP + MariaDB) :
+  - `docker compose up --build`
+- L’application est disponible sur `http://localhost:8080` et la base sur `localhost:3307`.
+- Pour importer la base dans le conteneur, utiliser `docker compose exec db mysql -uecoride -pecoride ecoride_db < database/20241104_schema_upgrade.sql` ou pointer vers `ecoride_db_v0.9.0.sql`.
 
 Configuration de l’application (src/Database.php)
-- `DB_HOST = 'localhost'`
-- `DB_NAME = 'ecoride_db'`
-- `DB_USER = 'root'`
-- `DB_PASS = ''` (par défaut avec XAMPP) — remplacez par votre mot de passe (`password321` dans l’environnement d’évaluation)
-- `DB_PORT = 3306`
-- `DB_SOCKET = ''` (Windows n’utilise pas de socket)
+- Copiez `.env.example` → `.env.local` (ignoré dans Git) et ajustez `DB_*` pour correspondre à votre instance locale.
+- Par défaut : `DB_HOST=localhost`, `DB_NAME=ecoride_db`, `DB_USER=root`, `DB_PASS=root` (MAMP) / `''` (XAMPP), `DB_PORT=8889` (MAMP) ou `3306`, `DB_SOCKET=` (optionnel sous macOS).
 
 Environnement de développement et IDE
 - IDE principal : Visual Studio Code (extensions conseillées : PHP Intelephense, ESLint, Prettier, GitLens).
 - Gestion de version : Git (GitHub). Stratégie : `main` + `develop` + branches fonctionnelles.
 - Terminal : PowerShell 7 et invite `cmd` (XAMPP).
 - Serveur local : XAMPP 8.2 (Apache 2.4 + MariaDB 10.4 + PHP 8.2).
-- Outillage complémentaire : phpMyAdmin (stockage configuré), Notion/Trello pour le kanban, Chrome/Edge pour les tests, MongoDB (optionnel) pour le logger NoSQL.
+- Outillage complémentaire : phpMyAdmin (stockage configuré), Notion pour le kanban, Chrome/Edge pour les tests, MongoDB (optionnel) pour le logger NoSQL.
+- Assistance : Codex (OpenAI) pour la relecture/automatisation”.
 
 Import de la base de données
 - Chemin du dump complet (ex.) : `C:/xampp/htdocs/EcoRide/ecoride_db.sql`
@@ -82,9 +95,10 @@ Pile technique (rapide)
 - Back‑end : PHP 8 + PDO
 - Base relationnelle : MariaDB/MySQL (XAMPP)
 - Dev : VS Code, Git/GitHub
+- Assistance : Codex (OpenAI) pour la relecture/automatisation”).
 
 Versions et livraisons
-- Version actuelle : 0.9.0 (2025‑11‑09)
+- Version actuelle : 0.9.0 (2025‑11‑11)
 - Changelog : voir `CHANGELOG.md`
 - Partage de la base avec les évaluateurs :
   - Recommandé : créer une Release GitHub (tag `v0.9.0`) et y joindre un dump zippé `ecoride_db_v0.9.0.sql.zip`. Ajouter le lien ici.
@@ -156,7 +170,7 @@ Guide (Quickstart)
   - Le logger NoSQL écrit dans `ecoride.needs` ; la page admin lit MongoDB si disponible.
 
 Produire un dump « propre » (Windows/XAMPP)
-- Depuis le terminal VS Code (PowerShell) :
+- Depuis le terminal dans VS Code :
   - `& 'C:\\xampp\\mysql\\bin\\mysqldump.exe' -u root --routines --triggers --single-transaction --default-character-set=utf8mb4 ecoride_db > 'C:\\xampp\\htdocs\\EcoRide\\ecoride_db_v0.9.0.sql'`
   - Zipper : clic droit sur le `.sql` → « Envoyer vers » → Dossier compressé.
   - Joindre le `.zip` à une Release GitHub et coller le lien ici.

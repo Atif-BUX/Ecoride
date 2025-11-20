@@ -39,3 +39,22 @@ if (!defined('APP_DEBUG')) {
 ini_set('display_errors', APP_DEBUG ? '1' : '0');
 error_reporting(APP_DEBUG ? E_ALL : E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 
+// Security headers (sent early, idempotent in practice)
+if (!headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-Frame-Options: DENY');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+    // Relaxed CSP to accommodate current CDNs and minimal inline styles/scripts
+    $csp = [
+        "default-src 'self'",
+        "img-src 'self' data: blob: https:",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+        "font-src 'self' data: https://fonts.gstatic.com",
+        "media-src 'self'",
+        "connect-src 'self'",
+        "frame-ancestors 'none'"
+    ];
+    header('Content-Security-Policy: ' . implode('; ', $csp));
+}

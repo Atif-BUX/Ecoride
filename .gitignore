@@ -1,0 +1,26 @@
+# IDE / Editors
+.idea/
+.vscode/
+*.iml
+
+# OS artifacts
+Thumbs.db
+desktop.ini
+
+# Logs & runtime outputs
+logs/
+*.log
+
+# Temporary / backup files
+*.bak
+*.bak.*
+*.after
+*.tmp
+tmp_*
+temp_*
+*.sql.bak
+
+# Node / vendor caches (if any)
+node_modules/
+vendor/
+.env.local

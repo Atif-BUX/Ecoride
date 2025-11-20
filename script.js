@@ -1,4 +1,4 @@
-// Fichier : script.js
+// Fichier : script.js - 20/11/25
 
 // 1. Initialisation GSAP
 gsap.registerPlugin(ScrollTrigger);
@@ -350,4 +350,281 @@ __runOnReady(function() {
             }
         });
     }
+
+    // 5. Recherche asynchrone des trajets (Fetch API)
+    const searchForm = document.getElementById('travelSearchForm');
+    const resultsContainer = document.getElementById('searchResults');
+    const statusAlert = document.getElementById('searchStatus');
+
+    if (searchForm && resultsContainer && statusAlert && typeof window.fetch === 'function') {
+        let csrfField = '';
+        if (resultsContainer.dataset.csrfField) {
+            try {
+                csrfField = atob(resultsContainer.dataset.csrfField);
+            } catch (e) {
+                csrfField = '';
+            }
+        }
+        const isAuth = resultsContainer.dataset.isAuth === '1';
+
+        searchForm.addEventListener('submit', function(event) {
+            if (!validateSearchForm()) {
+                event.preventDefault();
+                return;
+            }
+
+            event.preventDefault();
+            runAsyncTravelSearch(searchForm, resultsContainer, statusAlert, csrfField, isAuth);
+        });
+    }
 });
+
+function runAsyncTravelSearch(form, container, statusAlert, csrfField, isAuth) {
+    const formData = new FormData(form);
+    const query = new URLSearchParams(formData);
+
+    showStatus(statusAlert, 'Recherche en cours...', 'info');
+
+    fetch('api/search_travels.php?' + query.toString(), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Requête invalide');
+            }
+            return response.json();
+        })
+        .then(payload => {
+            renderAsyncResults(container, payload, csrfField, isAuth, formData);
+            if (payload.message) {
+                showStatus(statusAlert, payload.message, (payload.travels?.length || payload.fallback?.length) ? 'info' : 'warning');
+            } else {
+                hideStatus(statusAlert);
+            }
+        })
+        .catch(() => {
+            showStatus(statusAlert, 'Erreur lors de la recherche. Veuillez réessayer.', 'danger');
+        });
+}
+
+function renderAsyncResults(container, payload, csrfField, isAuth, formData) {
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+    const travels = Array.isArray(payload?.travels) ? payload.travels : [];
+    const fallback = Array.isArray(payload?.fallback) ? payload.fallback : [];
+
+    if (!travels.length && !fallback.length) {
+        container.appendChild(buildEmptyState(csrfField, isAuth, formData));
+        return;
+    }
+
+    if (travels.length) {
+        const fragment = document.createDocumentFragment();
+        travels.forEach(travel => fragment.appendChild(buildTravelCard(travel)));
+        container.appendChild(fragment);
+    }
+
+    if (fallback.length) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mt-4';
+
+        const title = document.createElement('h3');
+        title.className = 'h5 text-muted';
+        title.textContent = 'Suggestions proches';
+        wrapper.appendChild(title);
+
+        const fragment = document.createDocumentFragment();
+        fallback.forEach(travel => fragment.appendChild(buildTravelCard(travel)));
+        wrapper.appendChild(fragment);
+        container.appendChild(wrapper);
+    }
+}
+
+function buildTravelCard(travel) {
+    const link = document.createElement('a');
+    link.href = travel.detail_url || '#';
+    link.className = 'card mb-4 shadow-sm search-tool-card text-decoration-none d-block p-3';
+
+    const layout = document.createElement('div');
+    layout.className = 'd-flex justify-content-between align-items-center';
+    link.appendChild(layout);
+
+    const driverWrapper = document.createElement('div');
+    driverWrapper.className = 'd-flex align-items-center';
+    layout.appendChild(driverWrapper);
+
+    if (travel.photo) {
+        const photo = document.createElement('img');
+        photo.src = travel.photo;
+        photo.alt = 'Photo conducteur';
+        photo.className = 'rounded-circle me-3';
+        photo.style.width = '50px';
+        photo.style.height = '50px';
+        photo.style.objectFit = 'cover';
+        photo.style.border = '2px solid var(--color-primary-light)';
+        driverWrapper.appendChild(photo);
+    } else {
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-user fa-2x rounded-circle me-3 p-2 d-flex justify-content-center align-items-center';
+        icon.style.width = '50px';
+        icon.style.height = '50px';
+        icon.style.color = 'var(--color-primary-dark)';
+        icon.style.backgroundColor = 'var(--color-primary-light)';
+        driverWrapper.appendChild(icon);
+    }
+
+    const driverInfo = document.createElement('div');
+    driverWrapper.appendChild(driverInfo);
+
+    const driverName = document.createElement('p');
+    driverName.className = 'mb-0 fw-bold';
+    driverName.style.color = 'var(--color-primary-dark)';
+    driverName.textContent = travel.driver || 'Conducteur';
+    driverInfo.appendChild(driverName);
+
+    const routeLine = document.createElement('p');
+    routeLine.className = 'mb-0 text-muted small';
+    routeLine.textContent = `${travel.time_label || ''} – ${travel.departure_city || ''} → ${travel.arrival_city || ''}`;
+    driverInfo.appendChild(routeLine);
+
+    if (travel.date_label) {
+        const dateLine = document.createElement('p');
+        dateLine.className = 'mb-0 text-muted small';
+        dateLine.textContent = `Départ le ${travel.date_label}`;
+        driverInfo.appendChild(dateLine);
+    }
+
+    if (travel.description) {
+        const desc = document.createElement('p');
+        desc.className = 'mb-0 text-muted small fst-italic';
+        desc.textContent = travel.description;
+        driverInfo.appendChild(desc);
+    }
+
+    if (travel.car_details) {
+        const car = document.createElement('p');
+        car.className = 'mb-0 text-muted small';
+        car.innerHTML = '<i class=\"fas fa-car-side me-1\"></i> Véhicule: ';
+        const carText = document.createElement('span');
+        carText.textContent = travel.car_details;
+        car.appendChild(carText);
+        driverInfo.appendChild(car);
+    }
+
+    const priceWrapper = document.createElement('div');
+    priceWrapper.className = 'text-end';
+    layout.appendChild(priceWrapper);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge rounded-pill fs-5 p-2';
+    badge.style.backgroundColor = 'var(--color-primary-light)';
+    badge.style.color = 'var(--color-neutral-white)';
+    badge.textContent = `${formatPrice(travel.price_per_seat)} €`;
+    priceWrapper.appendChild(badge);
+
+    const seats = document.createElement('p');
+    seats.className = 'text-muted small mb-0';
+    seats.textContent = `${travel.available_seats || 0} place(s)`;
+    priceWrapper.appendChild(seats);
+
+    return link;
+}
+
+function buildEmptyState(csrfField, isAuth, formData) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'alert alert-info text-center py-4 my-3';
+    wrapper.setAttribute('role', 'alert');
+
+    const departureValue = escapeHtml(formData.get('depart') || '');
+    const arrivalValue = escapeHtml(formData.get('arrivee') || '');
+    const dateValue = escapeHtml(formData.get('date_depart') || '');
+
+    wrapper.innerHTML = `
+        <h4 class=\"alert-heading\">Aucun trajet trouvé 😔</h4>
+        <p>Désolé, nous n'avons trouvé aucun trajet correspondant à votre recherche.</p>
+        <hr>
+        <p class=\"mb-2\"><strong>Vous êtes passager ?</strong></p>
+        <div class=\"card card-body text-start\">
+            <form method=\"post\" action=\"covoiturages.php\" class=\"row g-2\">
+                <input type=\"hidden\" name=\"action\" value=\"express_need\">
+                ${csrfField || ''}
+                <div class=\"col-12 col-md-4\">
+                    <label for=\"need_depart_js\" class=\"form-label\">Départ</label>
+                    <input type=\"text\" id=\"need_depart_js\" name=\"depart\" class=\"form-control\" value=\"${departureValue}\" required>
+                </div>
+                <div class=\"col-12 col-md-4\">
+                    <label for=\"need_arrivee_js\" class=\"form-label\">Arrivée</label>
+                    <input type=\"text\" id=\"need_arrivee_js\" name=\"arrivee\" class=\"form-control\" value=\"${arrivalValue}\" required>
+                </div>
+                <div class=\"col-12 col-md-4\">
+                    <label for=\"need_date_js\" class=\"form-label\">Date souhaitée</label>
+                    <input type=\"date\" id=\"need_date_js\" name=\"date_depart\" class=\"form-control\" value=\"${dateValue}\">
+                </div>
+                <div class=\"col-12\">
+                    <label for=\"need_note_js\" class=\"form-label\">Message (optionnel)</label>
+                    <textarea id=\"need_note_js\" name=\"note\" class=\"form-control\" rows=\"2\" placeholder=\"Précisez vos contraintes ou préférences\"></textarea>
+                </div>
+                <div class=\"col-12\">
+                    <button type=\"submit\" class=\"btn btn-success\">Enregistrer ma demande</button>
+                </div>
+            </form>
+        </div>
+        <p class=\"mb-0\">
+            <strong>Vous êtes conducteur ?</strong>
+            ${isAuth ? '<a href=\"proposer_trajet.php\" class=\"alert-link fw-bold\" style=\"color: var(--color-primary-dark);\">Proposez votre trajet maintenant</a>' : '<a href=\"connexion.php\" class=\"alert-link fw-bold\" style=\"color: var(--color-primary-dark);\">Connectez-vous</a> pour proposer un trajet.'}
+        </p>
+    `;
+
+    return wrapper;
+}
+
+function showStatus(element, message, type) {
+    if (!element) {
+        return;
+    }
+    element.textContent = message;
+    element.className = 'alert alert-' + type;
+    element.classList.remove('d-none');
+}
+
+function hideStatus(element) {
+    if (!element) {
+        return;
+    }
+    element.classList.add('d-none');
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function(match) {
+        switch (match) {
+            case '&':
+                return '&amp;';
+            case '<':
+                return '&lt;';
+            case '>':
+                return '&gt;';
+            case '"':
+                return '&quot;';
+            case "'":
+                return '&#039;';
+            default:
+                return match;
+        }
+    });
+}
+
+function formatPrice(value) {
+    try {
+        return new Intl.NumberFormat('fr-FR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value || 0);
+    } catch (e) {
+        return (value || 0).toFixed(2);
+    }
+}

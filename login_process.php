@@ -18,8 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // 1. Inclure les classes nécessaires
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/src/Database.php';
 require_once __DIR__ . '/src/UserManager.php';
+require_once __DIR__ . '/src/RoleManager.php';
 
 // 2. Nettoyer les données (s'assurer qu'elles existent)
 $email = $_POST['email'] ?? '';
@@ -43,6 +45,14 @@ if (!$pdo) {
 }
 
 try {
+    // Purger les liens de réinitialisation expirés au login (hygiène)
+    require_once __DIR__ . '/src/PasswordResetManager.php';
+    try {
+        $prm = new PasswordResetManager($pdo);
+        $prm->ensureTable();
+        $pdo->exec("DELETE FROM password_resets WHERE expires_at < NOW() OR (used_at IS NOT NULL AND created_at < DATE_SUB(NOW(), INTERVAL 30 DAY))");
+    } catch (Throwable $ignored) {}
+
     $userManager = new UserManager($pdo);
 
     // Appel de la méthode login
@@ -58,7 +68,15 @@ try {
         $_SESSION['user_id'] = $user_data['id'];
         $_SESSION['user_email'] = $user_data['email'];
         $_SESSION['user_firstname'] = $user_data['first_name'];
+        $_SESSION['user_lastname'] = $user_data['last_name'] ?? '';
         $_SESSION['is_logged_in'] = true;
+        $roleManager = new RoleManager($pdo);
+        $roles = $roleManager->listRolesForUser($user_data['id']);
+        if (empty($roles)) {
+            $roleManager->assignRole($user_data['id'], 'USER');
+            $roles = ['USER'];
+        }
+        setCurrentUserRoles($roles);
         // Rafraîchir le token CSRF après connexion
         if (class_exists('Csrf')) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 

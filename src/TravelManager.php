@@ -1,12 +1,18 @@
 <?php
 // Fichier: src/TravelManager.php - 02/11/2025 - 18:15
 
+require_once __DIR__ . '/CreditManager.php';
+require_once __DIR__ . '/SystemParameterManager.php';
+require_once __DIR__ . '/NoSqlLogger.php';
+require_once __DIR__ . '/Email.php';
+
 /**
  * Gère les opérations de base de données liées aux trajets (covoiturages).
  */
 class TravelManager {
     // Utilisation de la classe complète \PDO
     private PDO $pdo;
+    private const PLATFORM_FEE = 2;
 
     /**
      * Constructeur. Nécessite une instance PDO valide pour fonctionner.
@@ -28,6 +34,24 @@ class TravelManager {
             travels T
         JOIN
             users U ON T.user_id = U.id";
+    }
+
+    /**
+     * Builds a column list including optional user photo columns if present in schema.
+     */
+    private function getUserColumnsWithPhoto(): string
+    {
+        $cols = 'T.*, U.first_name, U.last_name';
+        if ($this->hasColumn('users', 'photo')) {
+            $cols .= ', U.photo AS user_photo_bin';
+        }
+        if ($this->hasColumn('users', 'photo_mime_type')) {
+            $cols .= ', U.photo_mime_type AS user_photo_mime';
+        }
+        if ($this->hasColumn('users', 'photo_path')) {
+            $cols .= ', U.photo_path AS user_photo_path';
+        }
+        return $cols;
     }
 
     /**
@@ -121,7 +145,10 @@ class TravelManager {
      * @return array Un tableau de tous les trajets.
      */
     public function getAllTravels(): array {
-        $sql = $this->getBaseSelectQuery() . "
+        $sql = $this->getBaseSelectQuery($this->getUserColumnsWithPhoto()) . "
+           WHERE TIMESTAMP(T.departure_date, COALESCE(T.departure_time,'23:59:59')) >= NOW()
+             AND T.available_seats > 0
+             AND (T.status IS NULL OR T.status IN ('planned','open'))
            ORDER BY
                T.departure_date ASC, T.departure_time ASC";
         try {
@@ -142,10 +169,42 @@ class TravelManager {
      * @param string|null $date Date de départ.
      * @return array Un tableau des trajets correspondants.
      */
-    public function searchTravels(?string $departure, ?string $arrival, ?string $date): array {
-        $sql = $this->getBaseSelectQuery();
+    public function searchTravels(?string $departure, ?string $arrival, ?string $date, ?bool $ecoOnly = null, ?float $maxPrice = null, ?float $maxDuration = null, ?float $minRating = null): array {
+        // Base select plus optional aggregates (average rating)
+        $cols = $this->getUserColumnsWithPhoto() . ', R.avg_rating';
+        $sql = $this->getBaseSelectQuery($cols);
         $conditions = [];
         $params = [];
+
+        // Optional joins for filters
+        $joins = [];
+        if ($ecoOnly === true) {
+            $joins[] = "LEFT JOIN vehicles V ON V.id = T.vehicle_id";
+            $conditions[] = "V.energy = 'electrique'";
+        }
+        // Join reviews average for min rating filter
+        if ($minRating !== null) {
+            $joins[] = "LEFT JOIN (
+                SELECT reviewed_user_id, AVG(rating) AS avg_rating
+                FROM reviews
+                WHERE status = 'published'
+                GROUP BY reviewed_user_id
+            ) R ON R.reviewed_user_id = U.id";
+            $conditions[] = "R.avg_rating >= :min_rating";
+            $params[':min_rating'] = $minRating;
+        } else {
+            // Still expose rating column if joined not requested
+            $joins[] = "LEFT JOIN (
+                SELECT reviewed_user_id, AVG(rating) AS avg_rating
+                FROM reviews
+                WHERE status = 'published'
+                GROUP BY reviewed_user_id
+            ) R ON R.reviewed_user_id = U.id";
+        }
+
+        if (!empty($joins)) {
+            $sql .= " " . implode(" ", $joins);
+        }
 
         // Utilisation de marqueurs nommés pour la recherche pour la cohérence
         if (!empty($departure)) {
@@ -160,9 +219,20 @@ class TravelManager {
             $conditions[] = "T.departure_date = :date";
             $params[':date'] = $date;
         }
+        if ($maxPrice !== null) {
+            $conditions[] = "T.price_per_seat <= :max_price";
+            $params[':max_price'] = $maxPrice;
+        }
+        // Note: maxDuration filter not applied because no duration/arrival fields exist in schema.
 
+        // Always hide past travels and full trips in search results
+        $futureOnly = "TIMESTAMP(T.departure_date, COALESCE(T.departure_time,'23:59:59')) >= NOW()";
+        $seatsOnly  = "T.available_seats > 0";
+        $statusOnly = "(T.status IS NULL OR T.status IN ('planned','open'))";
         if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(" AND ", $conditions);
+            $sql .= " WHERE " . implode(" AND ", $conditions) . " AND " . $futureOnly . " AND " . $seatsOnly . " AND " . $statusOnly;
+        } else {
+            $sql .= " WHERE " . $futureOnly . " AND " . $seatsOnly . " AND " . $statusOnly;
         }
 
         $sql .= " ORDER BY T.departure_date ASC, T.departure_time ASC";
@@ -184,7 +254,7 @@ class TravelManager {
      * @return array|null Le tableau associatif du trajet, ou null si non trouvé.
      */
     public function getTravelById(int $id): ?array {
-        $sql = $this->getBaseSelectQuery() . "
+        $sql = $this->getBaseSelectQuery($this->getUserColumnsWithPhoto()) . "
                WHERE
                    T.id = :id"; // Utilisation de marqueurs nommés
         try {
@@ -207,8 +277,11 @@ class TravelManager {
      * @return array|null Les détails du trajet et du conducteur, ou null si non trouvé.
      */
     public function getTravelContactDetails(int $travelId): ?array {
-        // Colonnes spécifiques pour les contacts (email, phone_number)
+        // Colonnes spécifiques pour les contacts (email, phone_number) + photo si dispo
         $columns = 'T.*, U.first_name, U.last_name, U.email, U.phone_number';
+        if ($this->hasColumn('users', 'photo')) { $columns .= ', U.photo AS user_photo_bin'; }
+        if ($this->hasColumn('users', 'photo_mime_type')) { $columns .= ', U.photo_mime_type AS user_photo_mime'; }
+        if ($this->hasColumn('users', 'photo_path')) { $columns .= ', U.photo_path AS user_photo_path'; }
         $sql = $this->getBaseSelectQuery($columns) . "
         WHERE
            T.id = :id
@@ -241,7 +314,9 @@ class TravelManager {
            departure_time,
            price_per_seat,
            available_seats,
-           COALESCE(total_seats, available_seats) AS total_seats
+           COALESCE(total_seats, available_seats) AS total_seats,
+           earnings,
+           COALESCE(status,'planned') AS status
        FROM
            travels
        WHERE
@@ -405,8 +480,8 @@ class TravelManager {
         try {
             $this->pdo->beginTransaction();
 
-            // Lock the travel row to avoid race conditions
-            $lockSql = "SELECT user_id, available_seats FROM travels WHERE id = :id FOR UPDATE";
+            $lockSql = "SELECT user_id, available_seats, price_per_seat, departure_date, departure_time, status
+                        FROM travels WHERE id = :id FOR UPDATE";
             $lockStmt = $this->pdo->prepare($lockSql);
             $lockStmt->execute([':id' => $travelId]);
             $travel = $lockStmt->fetch(PDO::FETCH_ASSOC);
@@ -415,13 +490,21 @@ class TravelManager {
                 return false;
             }
 
-            // Prevent driver from booking own travel
+            // Prevent booking on past travels or non-planned status
+            $depDate = $travel['departure_date'] ?? null;
+            $depTime = $travel['departure_time'] ?? null;
+            if ($depDate) {
+                $when = $depDate . ' ' . ($depTime ?: '00:00:00');
+                try { $dt = new DateTime($when); } catch (Throwable $e) { $dt = null; }
+                if ($dt && $dt < new DateTime()) { $this->pdo->rollBack(); return false; }
+            }
+            if (!empty($travel['status']) && !in_array($travel['status'], ['planned','open'], true)) { $this->pdo->rollBack(); return false; }
+
             if ((int)$travel['user_id'] === (int)$userId) {
                 $this->pdo->rollBack();
                 return false;
             }
 
-            // For single-reservation policy: block if an active reservation already exists
             $chkSql = "SELECT id FROM reservations WHERE travel_id = :t AND user_id = :u AND status IN ('pending','confirmed') LIMIT 1 FOR UPDATE";
             $chk = $this->pdo->prepare($chkSql);
             $chk->execute([':t' => $travelId, ':u' => $userId]);
@@ -436,24 +519,81 @@ class TravelManager {
                 return false;
             }
 
-            // Insert reservation or reactivate a previously cancelled one
-            $resSql = "INSERT INTO reservations (travel_id, user_id, seats_booked, status)
-                       VALUES (:travel_id, :user_id, :seats_booked, 'confirmed')
-                       ON DUPLICATE KEY UPDATE seats_booked = VALUES(seats_booked), status = 'confirmed', booking_date = CURRENT_TIMESTAMP";
+            $seatCost = (float)$travel['price_per_seat'] * $seats;
+            $seatCostCredits = (int)ceil($seatCost);
+            $driverId = (int)$travel['user_id'];
+            $driverGain = max(0, $seatCostCredits - self::PLATFORM_FEE);
+
+            $creditManager = new CreditManager($this->pdo);
+            if (!$creditManager->hasSufficientBalance($userId, $seatCostCredits)) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $resSql = "INSERT INTO reservations
+                        (travel_id, user_id, seats_booked, status, booking_date, confirmed_at, credit_spent, driver_credit)
+                       VALUES
+                        (:travel_id, :user_id, :seats_booked, 'pending', CURRENT_TIMESTAMP, NULL, 0, 0)";
             $resStmt = $this->pdo->prepare($resSql);
             $resStmt->execute([
-                ':travel_id'   => $travelId,
-                ':user_id'     => $userId,
-                ':seats_booked'=> $seats,
+                ':travel_id'    => $travelId,
+                ':user_id'      => $userId,
+                ':seats_booked' => $seats,
+            ]);
+            $reservationId = (int)$this->pdo->lastInsertId();
+
+            // Pending-first flow committed; optional auto-confirm
+            $this->pdo->commit();
+
+            // Log to NoSQL (reservation event). Determine status without relying on $auto variable scope.
+            try {
+                $autoNow = '1';
+                try { $autoNow = (string)(new SystemParameterManager($this->pdo))->get('booking_auto_confirm', '1'); } catch (\Throwable $ignored) {}
+                $logStatus = ($autoNow === '1' || strtolower($autoNow) === 'true') ? 'confirmed' : 'pending';
+                NoSqlLogger::log('reservations', [
+                    'event' => 'reserve',
+                    'status' => $logStatus,
+                    'travel_id' => $travelId,
+                    'user_id' => $userId,
+                    'seats' => $seats
+                ]);
+            } catch (\Throwable $e) {}
+            $param = new SystemParameterManager($this->pdo);
+            $auto = (string)$param->get('booking_auto_confirm', '1');
+            if ($auto === '1' || strtolower($auto) === 'true') {
+                return $this->confirmReservation($travelId, $userId);
+            }
+            return true;
+
+            $updSql = "UPDATE travels
+                       SET available_seats = available_seats - :seats,
+                           earnings = earnings + :gain
+                       WHERE id = :id";
+            /* CLEANED: unreachable legacy block below (pre pending-first refactor)
+            $updStmt = $this->pdo->prepare($updSql);
+            $updStmt->execute([
+                ':seats' => $seats,
+                ':gain'  => $driverGain,
+                ':id'    => $travelId
             ]);
 
-            // Decrement available seats
-            $updSql = "UPDATE travels SET available_seats = available_seats - :seats WHERE id = :id";
-            $updStmt = $this->pdo->prepare($updSql);
-            $updStmt->execute([':seats' => $seats, ':id' => $travelId]);
+            if (!$creditManager->adjustBalance($userId, -$seatCostCredits, 'reservation_debit', $reservationId, "Réservation trajet #{$travelId}")) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            if ($driverGain > 0) {
+                if (!$creditManager->adjustBalance($driverId, $driverGain, 'reservation_credit', $reservationId, "Gain trajet #{$travelId}")) {
+                    $this->pdo->rollBack();
+                    return false;
+                }
+            }
 
             $this->pdo->commit();
+
+            try { NoSqlLogger::log('reservations', ['event'=>'confirm','travel_id'=>$travelId,'user_id'=>$userId,'seats'=>$seats]); } catch (\Throwable $e) {}
             return true;
+            */
         } catch (Throwable $e) {
             try { $this->pdo->rollBack(); } catch (Throwable $ignored) {}
             error_log("Reservation failed: " . $e->getMessage());
@@ -470,7 +610,7 @@ class TravelManager {
         $start = (clone $center)->modify('-' . $toleranceDays . ' day')->format('Y-m-d');
         $end   = (clone $center)->modify('+' . $toleranceDays . ' day')->format('Y-m-d');
 
-        $sql = $this->getBaseSelectQuery();
+        $sql = $this->getBaseSelectQuery($this->getUserColumnsWithPhoto());
         $conditions = [];
         $params = [':start_date' => $start, ':end_date' => $end];
         if (!empty($departure)) {
@@ -482,6 +622,9 @@ class TravelManager {
             $params[':arrival'] = '%' . $arrival . '%';
         }
         $conditions[] = "T.departure_date BETWEEN :start_date AND :end_date";
+        $conditions[] = "TIMESTAMP(T.departure_date, COALESCE(T.departure_time,'23:59:59')) >= NOW()";
+        $conditions[] = "T.available_seats > 0";
+        $conditions[] = "(T.status IS NULL OR T.status IN ('planned','open'))";
         if (!empty($conditions)) {
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
@@ -594,25 +737,68 @@ class TravelManager {
     public function cancelReservation(int $travelId, int $userId): bool {
         try {
             $this->pdo->beginTransaction();
-            // Lock the reservation row
-            $sel = $this->pdo->prepare("SELECT id, seats_booked FROM reservations WHERE travel_id = :t AND user_id = :u AND status IN ('pending','confirmed') LIMIT 1 FOR UPDATE");
+            $sel = $this->pdo->prepare("SELECT r.id, r.seats_booked, r.status, r.credit_spent, r.driver_credit, t.user_id AS driver_id
+                                         FROM reservations r
+                                         JOIN travels t ON t.id = r.travel_id
+                                         WHERE r.travel_id = :t AND r.user_id = :u AND r.status IN ('pending','confirmed')
+                                         LIMIT 1 FOR UPDATE");
             $sel->execute([':t' => $travelId, ':u' => $userId]);
             $res = $sel->fetch(PDO::FETCH_ASSOC);
             if (!$res) {
                 $this->pdo->rollBack();
                 return false;
             }
-            $seats = (int)$res['seats_booked'];
 
-            // Update reservation status
+            $seats = (int)$res['seats_booked'];
+            $status = (string)$res['status'];
+            $creditSpent = (int)$res['credit_spent'];
+            $driverCredit = (int)$res['driver_credit'];
+            $driverId = (int)$res['driver_id'];
+
             $updRes = $this->pdo->prepare("UPDATE reservations SET status = 'cancelled' WHERE id = :id");
             $updRes->execute([':id' => $res['id']]);
 
-            // Restore seats, capped by total_seats
-            $updSeats = $this->pdo->prepare("UPDATE travels SET available_seats = LEAST(total_seats, available_seats + :s) WHERE id = :id");
-            $updSeats->execute([':s' => $seats, ':id' => $travelId]);
+            if ($status === 'confirmed') {
+                $updSeats = $this->pdo->prepare("UPDATE travels
+                                                 SET available_seats = LEAST(total_seats, available_seats + :s),
+                                                     earnings = GREATEST(0, earnings - :driver_credit)
+                                                 WHERE id = :id");
+                $updSeats->execute([':s' => $seats, ':driver_credit' => $driverCredit, ':id' => $travelId]);
+
+                $creditManager = new CreditManager($this->pdo);
+                if ($creditSpent > 0) {
+                    if (!$creditManager->adjustBalance($userId, $creditSpent, 'reservation_refund', (int)$res['id'], "Annulation trajet #{$travelId}")) {
+                        $this->pdo->rollBack();
+                        return false;
+                    }
+                }
+
+                if ($driverCredit > 0) {
+                    if (!$creditManager->adjustBalance($driverId, -$driverCredit, 'driver_refund', (int)$res['id'], "Annulation trajet #{$travelId}")) {
+                        $this->pdo->rollBack();
+                        return false;
+                    }
+                }
+            }
 
             $this->pdo->commit();
+
+            // Notify passenger and driver (stubbed email logging)
+            try {
+                // Fetch emails
+                $uStmt = $this->pdo->prepare("SELECT email FROM users WHERE id = :id");
+                $uStmt->execute([':id' => $userId]);
+                $passengerEmail = ($uStmt->fetch(PDO::FETCH_ASSOC)['email'] ?? null);
+                $uStmt->execute([':id' => $driverId]);
+                $driverEmail = ($uStmt->fetch(PDO::FETCH_ASSOC)['email'] ?? null);
+                if ($passengerEmail) {
+                    Email::send($passengerEmail, 'Annulation de votre réservation', "Votre réservation pour le trajet #{$travelId} a été annulée.");
+                }
+                if ($driverEmail) {
+                    Email::send($driverEmail, 'Réservation annulée (passager)', "Une réservation (trajet #{$travelId}) a été annulée par le passager.");
+                }
+            } catch (Throwable $logErr) { /* ignore logging failures */ }
+
             return true;
         } catch (Throwable $e) {
             try { $this->pdo->rollBack(); } catch (Throwable $ignored) {}
@@ -630,6 +816,7 @@ class TravelManager {
                     r.seats_booked,
                     r.status,
                     r.booking_date,
+                    r.credit_spent,
                     T.departure_city,
                     T.arrival_city,
                     T.departure_date,
@@ -651,6 +838,229 @@ class TravelManager {
         } catch (PDOException $e) {
             error_log("getUserReservations failed: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Change travel status (planned -> in_progress -> completed) for driver's own travel.
+     * On completion, notifies passengers via email log.
+     */
+    public function setTravelStatus(int $travelId, int $driverId, string $newStatus): bool
+    {
+        $newStatus = in_array($newStatus, ['in_progress', 'completed'], true) ? $newStatus : '';
+        if ($newStatus === '') { return false; }
+        try {
+            $this->pdo->beginTransaction();
+            $stmt = $this->pdo->prepare("SELECT status FROM travels WHERE id = :id AND user_id = :uid FOR UPDATE");
+            $stmt->execute([':id' => $travelId, ':uid' => $driverId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) { $this->pdo->rollBack(); return false; }
+            $current = $row['status'] ?? 'planned';
+            if ($newStatus === 'in_progress' && $current !== 'planned') { $this->pdo->rollBack(); return false; }
+            if ($newStatus === 'completed' && $current !== 'in_progress') { $this->pdo->rollBack(); return false; }
+
+            $upd = $this->pdo->prepare("UPDATE travels SET status = :s WHERE id = :id");
+            $upd->execute([':s' => $newStatus, ':id' => $travelId]);
+            $this->pdo->commit();
+
+            if ($newStatus === 'completed') {
+                // Notify all confirmed passengers (stubbed email log)
+                try {
+                    $q = $this->pdo->prepare("SELECT u.email FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.travel_id = :t AND r.status = 'confirmed'");
+                    $q->execute([':t' => $travelId]);
+                    $emails = $q->fetchAll(PDO::FETCH_COLUMN);
+                    foreach ($emails as $mail) {
+                        if ($mail) { Email::send($mail, 'Trajet terminé', "Votre trajet #{$travelId} est marqué comme terminé. Merci de laisser un avis."); }
+                    }
+                    // Notify driver for record
+                    $driverMail = $this->pdo->query("SELECT email FROM users WHERE id = " . (int)$driverId)->fetchColumn();
+                    if ($driverMail) { Email::send($driverMail, 'Trajet clôturé', "Trajet #{$travelId} clôturé. Revenus mis à jour."); }
+                } catch (Throwable $ignored) { }
+                try { NoSqlLogger::log('travels', ['event'=>'complete','travel_id'=>$travelId,'driver_id'=>$driverId]); } catch (\Throwable $e) {}
+            }
+            return true;
+        } catch (Throwable $e) {
+            try { $this->pdo->rollBack(); } catch (Throwable $ignored2) {}
+            error_log('setTravelStatus failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Liste les réservations passées pour lesquelles l'utilisateur n'a pas encore laissé d'avis.
+     */
+    public function getPendingReviewsForPassenger(int $userId): array {
+        $sql = "SELECT
+                    r.travel_id,
+                    T.departure_city,
+                    T.arrival_city,
+                    T.departure_date,
+                    T.departure_time,
+                    U.id AS driver_id,
+                    U.first_name AS driver_first_name,
+                    U.last_name AS driver_last_name
+                FROM reservations r
+                JOIN travels T ON r.travel_id = T.id
+                JOIN users U ON T.user_id = U.id
+                LEFT JOIN reviews rev
+                    ON rev.travel_id = T.id
+                   AND rev.reviewer_id = :reviewer_id
+                WHERE r.user_id = :res_user_id
+                  AND r.status = 'confirmed'
+                  AND rev.id IS NULL
+                  AND TIMESTAMP(T.departure_date, COALESCE(T.departure_time, '00:00:00')) < NOW()
+                ORDER BY T.departure_date DESC, T.departure_time DESC";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':reviewer_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':res_user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $rows;
+        } catch (PDOException $e) {
+            error_log("getPendingReviewsForPassenger failed: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Récupère les informations nécessaires pour laisser un avis sur un trajet donné.
+     */
+    public function getReviewContext(int $travelId, int $userId): ?array {
+        $sql = "SELECT
+                    r.travel_id,
+                    T.departure_city,
+                    T.arrival_city,
+                    T.departure_date,
+                    T.departure_time,
+                    U.id AS driver_id,
+                    U.first_name AS driver_first_name,
+                    U.last_name AS driver_last_name
+                FROM reservations r
+                JOIN travels T ON r.travel_id = T.id
+                JOIN users U ON T.user_id = U.id
+                LEFT JOIN reviews rev
+                    ON rev.travel_id = T.id
+                   AND rev.reviewer_id = :reviewer_id
+                WHERE r.travel_id = :travel_id
+                  AND r.user_id = :res_user_id
+                  AND r.status = 'confirmed'
+                  AND rev.id IS NULL
+                  AND TIMESTAMP(T.departure_date, COALESCE(T.departure_time, '00:00:00')) < NOW()
+                LIMIT 1";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                ':travel_id' => $travelId,
+                ':res_user_id' => $userId,
+                ':reviewer_id' => $userId,
+            ]);
+            $context = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $context ?: null;
+        } catch (PDOException $e) {
+            error_log("getReviewContext failed: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Returns pending reservations for travels owned by the given driver.
+     */
+    public function getPendingReservationsForDriver(int $driverId): array
+    {
+        // Build optional passenger photo columns if present
+        $uCols = 'u.first_name AS passenger_first_name, u.last_name AS passenger_last_name, u.email AS passenger_email';
+        if ($this->hasColumn('users', 'photo')) { $uCols .= ', u.photo AS passenger_photo_bin'; }
+        if ($this->hasColumn('users', 'photo_mime_type')) { $uCols .= ', u.photo_mime_type AS passenger_photo_mime'; }
+        if ($this->hasColumn('users', 'photo_path')) { $uCols .= ', u.photo_path AS passenger_photo_path'; }
+
+        $sql = "SELECT 
+                    r.id              AS reservation_id,
+                    r.travel_id,
+                    r.user_id         AS passenger_id,
+                    r.seats_booked,
+                    r.booking_date,
+                    t.departure_city,
+                    t.arrival_city,
+                    t.departure_date,
+                    t.departure_time,
+                    {$uCols}
+                FROM reservations r
+                JOIN travels t   ON t.id = r.travel_id
+                JOIN users u     ON u.id = r.user_id
+                WHERE t.user_id = :driver_id AND r.status = 'pending'
+                ORDER BY r.booking_date DESC";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([':driver_id' => $driverId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("getPendingReservationsForDriver failed: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Confirms a pending reservation and applies seats/credits/earnings atomically.
+     */
+    public function confirmReservation(int $travelId, int $userId): bool
+    {
+        try {
+            $this->pdo->beginTransaction();
+
+            // Lock travel and read current pricing/availability
+            $tStmt = $this->pdo->prepare("SELECT user_id, available_seats, price_per_seat, departure_date, departure_time, status FROM travels WHERE id = :id FOR UPDATE");
+            $tStmt->execute([':id' => $travelId]);
+            $t = $tStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$t) { $this->pdo->rollBack(); return false; }
+
+            // Prevent confirming on past travels or non-planned status
+            $depDate = $t['departure_date'] ?? null;
+            $depTime = $t['departure_time'] ?? null;
+            if ($depDate) {
+                $when = $depDate . ' ' . ($depTime ?: '00:00:00');
+                try { $dt = new DateTime($when); } catch (Throwable $e) { $dt = null; }
+                if ($dt && $dt < new DateTime()) { $this->pdo->rollBack(); return false; }
+            }
+            if (!empty($t['status']) && !in_array($t['status'], ['planned','open'], true)) { $this->pdo->rollBack(); return false; }
+
+            // Lock pending reservation
+            $rStmt = $this->pdo->prepare("SELECT id, seats_booked FROM reservations WHERE travel_id = :t AND user_id = :u AND status = 'pending' LIMIT 1 FOR UPDATE");
+            $rStmt->execute([':t' => $travelId, ':u' => $userId]);
+            $r = $rStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$r) { $this->pdo->rollBack(); return false; }
+
+            $seats = (int)$r['seats_booked'];
+            $available = (int)$t['available_seats'];
+            if ($available < $seats) { $this->pdo->rollBack(); return false; }
+
+            $seatCostCredits = (int)ceil(((float)$t['price_per_seat']) * $seats);
+            $driverId = (int)$t['user_id'];
+            $driverGain = max(0, $seatCostCredits - self::PLATFORM_FEE);
+
+            $creditManager = new CreditManager($this->pdo);
+            if (!$creditManager->hasSufficientBalance($userId, $seatCostCredits)) { $this->pdo->rollBack(); return false; }
+
+            // Flip to confirmed and record amounts
+            $updRes = $this->pdo->prepare("UPDATE reservations SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP, credit_spent = :cs, driver_credit = :dg WHERE id = :id");
+            $updRes->execute([':cs' => $seatCostCredits, ':dg' => $driverGain, ':id' => $r['id']]);
+
+            // Apply travel side-effects
+            $updTravel = $this->pdo->prepare("UPDATE travels SET available_seats = available_seats - :s, earnings = earnings + :gain WHERE id = :id");
+            $updTravel->execute([':s' => $seats, ':gain' => $driverGain, ':id' => $travelId]);
+
+            // Apply credit movements
+            if (!$creditManager->adjustBalance($userId, -$seatCostCredits, 'reservation_debit', (int)$r['id'], "Réservation trajet #{$travelId}")) { $this->pdo->rollBack(); return false; }
+            if ($driverGain > 0) {
+                if (!$creditManager->adjustBalance($driverId, $driverGain, 'reservation_credit', (int)$r['id'], "Gain trajet #{$travelId}")) { $this->pdo->rollBack(); return false; }
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            try { $this->pdo->rollBack(); } catch (Throwable $ignored) {}
+            error_log("confirmReservation failed: " . $e->getMessage());
+            return false;
         }
     }
 }

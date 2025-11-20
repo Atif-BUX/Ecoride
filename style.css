@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* CSS Document 2025 for project Studi "EcoRide" designed by Mr Atif BUX */
 :root {
     --color-primary-dark: #1e8449; /* #00CC00; <-- More brighter */
@@ -16,6 +17,14 @@ body {
 /* Layout: sticky footer full width */
 html, body {
     height: 100%;
+}
+
+.highlight-green {
+    color: var(--color-primary-dark);
+}
+
+.heading-muted {
+    color: var(--color-neutral-gray);
 }
 
 body {
@@ -106,6 +115,25 @@ a {
 
 a:hover {
     color: var(--color-primary-light);
+}
+
+/* Lisibilité des liens dans les aides (form-text, text-muted) */
+.form-text a,
+small.form-text a,
+.text-muted a {
+    color: var(--color-primary-dark) !important;
+    text-decoration: underline;
+}
+.form-text a:hover,
+small.form-text a:hover,
+.text-muted a:hover {
+    color: var(--color-primary-light) !important;
+}
+.form-text a:focus,
+small.form-text a:focus,
+.text-muted a:focus {
+    outline: 2px dashed var(--color-primary-light);
+    outline-offset: 2px;
 }
 
 .main-footer a {
